@@ -4,27 +4,13 @@ import java.util.ArrayList;
 
 public class Registry {
 	
-	private String host;
 	private int port;
-	private int numOverlay;
 	private ArrayList<Node> registeredNodes = new ArrayList<Node>();
+	private TCPServerThread serverThread;
 	
-	public Registry(String host, int port)
+	public Registry(int port)
 	{
-		this.host = host;
 		this.port = port;
-		this.numOverlay = 10;
-	}
-	
-	public Registry(String host, int port, int numOverlay) throws Exception
-	{
-		if(numOverlay < 10)
-		{
-			throw new Exception("Number Overlay must be greater than 10: " + numOverlay);
-		}
-		this.host = host;
-		this.port = port;
-		this.numOverlay = numOverlay;
 	}
 	
 	public void registerNode(Node node)
@@ -43,8 +29,24 @@ public class Registry {
 		}
 	}
 	
+	public void setServerThread(TCPServerThread serverThread) {
+		this.serverThread = serverThread;
+	}
+	
+	public void startServerThread() {
+		new Thread(this.serverThread).start();
+	}
+	
 	// java cs455.overlay.node.MessagingNode local_port
 	public static void main(String[] args) {
+		Registry registry = null;
+		if(args.length == 1) {
+			registry = new Registry(Integer.parseInt(args[0]));
+		}
+		
+		registry.setServerThread(new TCPServerThread(registry.getPort(), registry));
+		registry.startServerThread();
+		
 		
 	}
 }

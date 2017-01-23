@@ -10,13 +10,15 @@ public class MessagingNode implements Node {
 	private int port, nodeID;
 	private TCPServerThread serverThread;
 
-	public MessagingNode(int port) throws IOException {
-		this.port = port;
+	public MessagingNode() throws IOException {
 	}
 
 	public void setServerThread(TCPServerThread serverThread) {
 		this.serverThread = serverThread;
-		this.serverThread.run();
+	}
+	
+	public void startServerThread() {
+		new Thread(this.serverThread).start();
 	}
 
 	public void register() {
@@ -30,27 +32,31 @@ public class MessagingNode implements Node {
 	private int getPort() {
 		return this.port;
 	}
+	
+	public void getPort(int port) {
+		this.port = port;
+	}
 
-	// java cs455.overlay.node.MessagingNode registry_host registry_port local_port
+	// java cs455.overlay.node.MessagingNode registry_host registry_port
 	public static void main(String[] args) {
 		byte[] baData = (new String("registered on " + args[0] + " : " + args[1])).getBytes();
 		if (args.length != 3) {
 			System.out.println("Sorry but you need a host and port number entered");
 		}
 		MessagingNode mNode = null;
-		System.out.println("Messaging Node is being created on port " + args[2] + " .......");
 		try {
-			mNode = new MessagingNode(Integer.parseInt(args[2]));
+			mNode = new MessagingNode();
 			mNode.setID(10);
 
-			mNode.setServerThread(new TCPServerThread(mNode.getPort(), mNode));
+			// Set portnumber to 0 so ServerSocket picks one
+			mNode.setServerThread(new TCPServerThread(0, mNode));
+			mNode.startServerThread();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		try {
-			WireFormatWidget data = new WireFormatWidget(baData);
-			TCPSender sender = new TCPSender(data.getBytes());
+			//Attempt to send data to another widget
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

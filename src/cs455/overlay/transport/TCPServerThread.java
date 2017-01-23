@@ -13,10 +13,10 @@ public class TCPServerThread implements Runnable {
 	private MessagingNode node;
 	
 	public TCPServerThread(int port, MessagingNode node) throws IOException {
-		this.port = port;
 		this.node = node;
 		try {
-			this.serverSocket = new ServerSocket(getPort());
+			this.serverSocket = new ServerSocket(port);
+			this.port = this.serverSocket.getLocalPort();
 		} catch (IOException ioe) {
 			System.out.println(ioe.getMessage());
 		}
