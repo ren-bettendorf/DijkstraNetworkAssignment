@@ -2,6 +2,7 @@ package cs455.overlay.node;
 
 import java.io.IOException;
 
+import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.*;
 
@@ -32,7 +33,7 @@ public class MessagingNode implements Node {
 
 	// java cs455.overlay.node.MessagingNode registry_host registry_port local_port
 	public static void main(String[] args) {
-		byte[] data = (new String("registered on " + args[0] + " : " + args[1])).getBytes();
+		byte[] baData = (new String("registered on " + args[0] + " : " + args[1])).getBytes();
 		if (args.length != 3) {
 			System.out.println("Sorry but you need a host and port number entered");
 		}
@@ -43,6 +44,13 @@ public class MessagingNode implements Node {
 			mNode.setID(10);
 
 			mNode.setServerThread(new TCPServerThread(mNode.getPort(), mNode));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			WireFormatWidget data = new WireFormatWidget(baData);
+			TCPSender sender = new TCPSender(data.getBytes());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
