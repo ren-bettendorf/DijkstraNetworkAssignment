@@ -1,5 +1,11 @@
 package cs455.overlay.transport;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+import cs455.overlay.node.MessagingNode;
+
 public class TCPServerThread implements Runnable {
 	
 	private int port;
@@ -10,19 +16,18 @@ public class TCPServerThread implements Runnable {
 		this.port = port;
 		this.node = node;
 		try {
-			this.serverSocket = new ServerSocket(getPort())
+			this.serverSocket = new ServerSocket(getPort());
 		} catch (IOException ioe) {
 			System.out.println(ioe.getMessage());
-			break;
 		}
 	}
 	
 	public void run() {
 		System.out.println("Starting thread for node: " + node.toString() + ". Listening on port: " + getPort());
 		
-		while(socket != null) {
+		while(serverSocket != null) {
 			try {
-				Socket s = serverSocket.accept();
+				Socket socket = serverSocket.accept();
 			} catch (IOException ioe) {
 			System.out.println(ioe.getMessage());
 			break;
