@@ -42,4 +42,9 @@ public class Registry {
 			registeredNodes.remove(node);
 		}
 	}
+	
+	// java cs455.overlay.node.MessagingNode local_port
+	public static void main(String[] args) {
+		
+	}
 }
