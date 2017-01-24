@@ -8,7 +8,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class SendRegistrationRequest {
+public class SendRegistrationRequest implements IMessage {
 	private int type;
 	private long timestamp;
 	private String hostname;
@@ -34,6 +34,7 @@ public class SendRegistrationRequest {
 		din.close();
 	}
 	
+	@Override
 	public byte[] getBytes() throws IOException {
 		byte[] marshalledBytes = null;
 		

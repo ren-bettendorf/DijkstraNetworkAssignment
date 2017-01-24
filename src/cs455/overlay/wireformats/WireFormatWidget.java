@@ -8,7 +8,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class WireFormatWidget {
+public class WireFormatWidget implements IMessage {
 	private int type;
 	private long timestamp;
 	private String identifier;

@@ -2,7 +2,6 @@ package cs455.overlay.node;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.*;
 
@@ -29,7 +28,7 @@ public class MessagingNode implements Node {
 		this.nodeID = ID;
 	}
 
-	private int getPort() {
+	public int getPort() {
 		return this.port;
 	}
 	
@@ -52,13 +51,6 @@ public class MessagingNode implements Node {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//try {
-			//Attempt to send data to another widget
-		//} catch (IOException e) {
-			// TODO Auto-generated catch block
-		//	e.printStackTrace();
-		//}
-
 	}
 
 	@Override
