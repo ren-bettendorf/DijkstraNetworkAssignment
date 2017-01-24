@@ -1,7 +1,7 @@
 package cs455.overlay.node;
 
 import java.io.IOException;
-
+import java.net.InetAddress;
 import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.*;
@@ -40,9 +40,6 @@ public class MessagingNode implements Node {
 	// java cs455.overlay.node.MessagingNode registry_host registry_port
 	public static void main(String[] args) {
 		byte[] baData = (new String("registered on " + args[0] + " : " + args[1])).getBytes();
-		if (args.length != 3) {
-			System.out.println("Sorry but you need a host and port number entered");
-		}
 		MessagingNode mNode = null;
 		try {
 			mNode = new MessagingNode();
@@ -55,18 +52,23 @@ public class MessagingNode implements Node {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		try {
+		//try {
 			//Attempt to send data to another widget
-		} catch (IOException e) {
+		//} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		//	e.printStackTrace();
+		//}
 
 	}
 
 	@Override
 	public String toString() {
-		return "Node:" + this.nodeID + " : " + this.serverThread.getServerSocket().toString();
+		try {
+			return "Node:" + this.nodeID + " : " + InetAddress.getLocalHost().getHostAddress() + " : " + this.serverThread.getPort();
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return null;
 	}
 
 	@Override

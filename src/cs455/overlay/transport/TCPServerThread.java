@@ -4,15 +4,15 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import cs455.overlay.node.MessagingNode;
+import cs455.overlay.node.Node;
 
 public class TCPServerThread implements Runnable {
 	
 	private int port;
 	private ServerSocket serverSocket;
-	private MessagingNode node;
+	private Node node;
 	
-	public TCPServerThread(int port, MessagingNode node) throws IOException {
+	public TCPServerThread(int port, Node node) throws IOException {
 		this.node = node;
 		try {
 			this.serverSocket = new ServerSocket(port);
@@ -37,7 +37,7 @@ public class TCPServerThread implements Runnable {
 		System.out.println("Ending thread for node: " + node.toString() + ". Closing on port: " + getPort());
 	}
 	
-	private int getPort() {
+	public int getPort() {
 		return this.port;
 	}
 	

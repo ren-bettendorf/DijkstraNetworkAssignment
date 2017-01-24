@@ -43,7 +43,7 @@ public class SendRegistrationRequest {
 		dout.writeInt(type);
 		dout.writeLong(timestamp);
 		
-		byte[] hostnameBytes = host.getBytes();
+		byte[] hostnameBytes = hostname.getBytes();
 		int hostnameLength = hostnameBytes.length;
 		dout.writeInt(hostnameLength);
 		dout.write(hostnameBytes);

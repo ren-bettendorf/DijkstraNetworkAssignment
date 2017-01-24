@@ -1,7 +1,9 @@
 package cs455.overlay.node;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import cs455.overlay.transport.TCPServerThread;
+import cs455.overlay.wireformats.Event;
 
 public class Registry implements Node {
 	
@@ -48,10 +50,13 @@ public class Registry implements Node {
 		if(args.length == 1) {
 			registry = new Registry(Integer.parseInt(args[0]));
 		}
-		
-		registry.setServerThread(new TCPServerThread(registry.getPort(), registry));
-		registry.startServerThread();
-		
+		try {
+			registry.setServerThread(new TCPServerThread(registry.getPort(), registry));
+			registry.startServerThread();
+		} catch(IOException ioe) {
+			System.out.println(ioe.getMessage());
+			System.exit(1);
+		}
 		
 	}
 	
