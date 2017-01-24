@@ -1,8 +1,9 @@
 package cs455.overlay.node;
 
 import java.util.ArrayList;
+import cs455.overlay.transport.TCPServerThread;
 
-public class Registry {
+public class Registry implements Node {
 	
 	private int port;
 	private ArrayList<Node> registeredNodes = new ArrayList<Node>();
@@ -37,6 +38,10 @@ public class Registry {
 		new Thread(this.serverThread).start();
 	}
 	
+	public int getPort() {
+		return this.port;
+	}
+	
 	// java cs455.overlay.node.MessagingNode local_port
 	public static void main(String[] args) {
 		Registry registry = null;
@@ -48,5 +53,11 @@ public class Registry {
 		registry.startServerThread();
 		
 		
+	}
+	
+	@Override
+	public void onEvent(Event event) throws IOException {
+		// TODO Auto-generated method stub
+
 	}
 }
