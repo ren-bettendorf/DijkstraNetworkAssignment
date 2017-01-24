@@ -1,5 +1,6 @@
 package cs455.overlay.node;
 
+import java.net.InetAddress;
 import java.io.IOException;
 import java.util.ArrayList;
 import cs455.overlay.transport.TCPServerThread;
@@ -64,5 +65,15 @@ public class Registry implements Node {
 	public void onEvent(Event event) throws IOException {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public String toString() {
+		try {
+			return "Registry: " + InetAddress.getLocalHost().getHostAddress() + " : " + this.serverThread.getPort();
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return null;
 	}
 }
