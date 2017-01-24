@@ -56,7 +56,7 @@ public class MessagingNode implements Node {
 	@Override
 	public String toString() {
 		try {
-			return "Node:" + this.nodeID + " : " + InetAddress.getLocalHost().getHostAddress() + " : " + this.serverThread.getPort();
+			return InetAddress.getLocalHost().getHostAddress() + ":" + this.serverThread.getPort();
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
 		}
