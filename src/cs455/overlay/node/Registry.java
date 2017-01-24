@@ -44,7 +44,7 @@ public class Registry implements Node {
 		return this.port;
 	}
 	
-	// java cs455.overlay.node.MessagingNode local_port
+	// java cs455.overlay.node.Registry local_port
 	public static void main(String[] args) {
 		Registry registry = null;
 		if(args.length == 1) {
