@@ -11,4 +11,5 @@ public interface Protocols {
 	final int TASK_COMPLETE = 7;
 	final int PULL_TRAFFIC_SUMMARY = 8;
 	final int TRAFFIC_SUMMARY = 9;
+	final int END_CONNECTION = -1;
 }

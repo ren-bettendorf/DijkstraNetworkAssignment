@@ -28,10 +28,13 @@ public class TCPReceiverThread implements Runnable {
 		while(socket != null) {
 			try {
 				dataLength = din.readInt();
+				
 				byte[] data = new byte[dataLength];
 				din.readFully(data, 0, dataLength);
-				System.out.println("TCPReceiverThread started with following data: " + data.toString());
+				
+				//System.out.println("TCPReceiverThread started with following data: " + data.toString());
 				Event event = EventFactory.getInstance().getEvent(data);
+				
 				node.onEvent(event);
 			} catch(SocketException se) {
 				System.out.println(se.getMessage());

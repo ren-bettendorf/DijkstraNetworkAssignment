@@ -24,4 +24,8 @@ public class TCPConnection {
 	public void sendData(byte[] dataToSend) throws IOException {
 		this.tcpSender.sendData(dataToSend);
 	}
+	
+	public void closeConnections() {
+		
+	}
 }

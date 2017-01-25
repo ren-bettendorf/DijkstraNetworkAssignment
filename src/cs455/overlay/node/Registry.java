@@ -15,32 +15,28 @@ import cs455.overlay.wireformats.RegistrationResponse;
 public class Registry implements Node {
 
 	private int port;
-	private ArrayList<Node> registeredNodes = new ArrayList<Node>();
+	private ArrayList<String> registeredNodes = new ArrayList<String>();
 	private TCPServerThread serverThread;
 	private Thread thread;
-	private int nodesConnect = 0;
 
 	public Registry(int port) {
 		this.port = port;
 	}
 
-	public void registerNode(Node node) {
+	public void registerNode(String node) {
 		if (!registeredNodes.contains(node)) {
 			registeredNodes.add(node);
 		}
 	}
 
-	public void deregisterNode(Node node) {
+	public void deregisterNode(String node) {
 		if (registeredNodes.contains(node)) {
 			registeredNodes.remove(node);
 		}
 	}
 
-	public void setServerThread(TCPServerThread serverThread) {
+	public void startServerThread(TCPServerThread serverThread) {
 		this.serverThread = serverThread;
-	}
-
-	public void startServerThread() {
 		this.thread = new Thread(this.serverThread);
 		this.thread.start();
 	}
@@ -56,8 +52,7 @@ public class Registry implements Node {
 			registry = new Registry(Integer.parseInt(args[0]));
 		}
 		try {
-			registry.setServerThread(new TCPServerThread(registry.getPort(), registry));
-			registry.startServerThread();
+			registry.startServerThread(new TCPServerThread(registry.getPort(), registry));
 		} catch (IOException ioe) {
 			System.out.println(ioe.getMessage());
 			System.exit(1);
@@ -72,8 +67,10 @@ public class Registry implements Node {
 		switch (eventType) {
 		case Protocols.REGISTER_REQUEST:
 			RegistrationRequest request = (RegistrationRequest) event;
-			System.out.println("Received a request from: " + request.getHostname() + ":" + request.getPort());
-			nodesConnect++;
+			String nodeHostPort = request.getHostname() + ":" + request.getPort();
+			System.out.println("Received a registration request from: " + nodeHostPort);
+			
+			registerNode(nodeHostPort);
 			
 			byte regResult = 1;
 			String response = "Registration request successful. The number of messaging nodes currently constituting the overlay is (" + nodesConnect + ")";
@@ -87,6 +84,13 @@ public class Registry implements Node {
 			System.out.println("Sending registration report...");
 			connection.sendData(registrationResponse.getBytes());
 			break;
+		case Protocols.DEREGISTER_REQUEST:
+			DeregistrationRequest request = (DeregistrationRequest) event;
+			
+			System.out.println("Received a request from: " + request.getHostname() + ":" + request.getPort());
+			
+			
+			
 		}
 
 	}

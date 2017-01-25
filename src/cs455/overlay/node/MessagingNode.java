@@ -13,16 +13,14 @@ public class MessagingNode implements Node {
 	private int port, nodeID;
 	private TCPServerThread serverThread;
 	private Thread thread;
+	private TCPConnection connection;
 
 	public MessagingNode() throws IOException {
 	}
 
-	public void setServerThread(TCPServerThread serverThread) {
+	private void startServerThread(TCPServerThread serverThread) {
 		this.serverThread = serverThread;
 		setPort(serverThread.getPort());
-	}
-
-	public void startServerThread() {
 		this.thread = new Thread(this.serverThread);
 		this.thread.start();
 	}
@@ -35,7 +33,7 @@ public class MessagingNode implements Node {
 		byte[] data = registrationRequest.getBytes();
 		System.out.println("Sending registration request...");
 		Socket socket = new Socket(registryHost, registryPort);
-		TCPConnection connection = new TCPConnection(this, socket);
+		this.connection = new TCPConnection(this, socket);
 		connection.sendData(data);
 	}
 
@@ -69,8 +67,7 @@ public class MessagingNode implements Node {
 			mNode.setID(10);
 
 			// Set portnumber to 0 so ServerSocket picks one
-			mNode.setServerThread(new TCPServerThread(0, mNode));
-			mNode.startServerThread();
+			mNode.startServerThread(new TCPServerThread(0, mNode));
 
 			mNode.register(registryHost, registryPort);
 		} catch (IOException e) {
@@ -81,9 +78,12 @@ public class MessagingNode implements Node {
 		Scanner keyboard = new Scanner(System.in);
 		System.out.println("Keyboard scanner ready for commands...");
 		String userInput = "";
-		while(!userInput.equals("close")) {
+		while(!userInput.equals("exit-overlay")) {
 			userInput = keyboard.nextLine();
 			System.out.println("User input: " + userInput);
+			if(userInput.equals("exit-overlay")) {
+				this.connection.
+			}
 		}
 	}
 
