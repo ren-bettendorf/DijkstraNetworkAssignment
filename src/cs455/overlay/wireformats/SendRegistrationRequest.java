@@ -8,7 +8,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class SendRegistrationRequest implements IMessage {
+public class SendRegistrationRequest implements IMessage, Protocols {
 	private int type;
 	private long timestamp;
 	private String hostname;
