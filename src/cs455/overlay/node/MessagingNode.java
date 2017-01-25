@@ -3,6 +3,7 @@ package cs455.overlay.node;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Scanner;
 
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
@@ -75,6 +76,14 @@ public class MessagingNode implements Node {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		
+		Scanner keyboard = new Scanner(System.in);
+		System.out.println("Keyboard scanner ready for commands...");
+		String userInput = "";
+		while(!userInput.equals("close")) {
+			userInput = keyboard.nextLine();
+			System.out.println("User input: " + userInput);
 		}
 	}
 
