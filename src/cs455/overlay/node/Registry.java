@@ -5,12 +5,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.Protocols;
+import cs455.overlay.wireformats.SendRegistrationRequest;
 
 public class Registry implements Node {
 	
 	private int port;
 	private ArrayList<Node> registeredNodes = new ArrayList<Node>();
 	private TCPServerThread serverThread;
+	private Thread thread;
 	
 	public Registry(int port)
 	{
@@ -38,7 +41,8 @@ public class Registry implements Node {
 	}
 	
 	public void startServerThread() {
-		new Thread(this.serverThread).start();
+		this.thread = new Thread(this.serverThread);
+		this.thread.start();
 	}
 	
 	public int getPort() {
@@ -64,6 +68,13 @@ public class Registry implements Node {
 	@Override
 	public void onEvent(Event event) throws IOException {
 		// TODO Auto-generated method stub
+		int eventType = event.getType();
+		switch (eventType) {
+		case Protocols.REGISTER_REQUEST:
+			SendRegistrationRequest request = (SendRegistrationRequest)event;
+			System.out.println("Received a request from: " + request.getHostname() + ":" + request.getPort());
+			break;
+		}
 
 	}
 

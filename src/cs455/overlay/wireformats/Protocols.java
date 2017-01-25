@@ -1,6 +1,6 @@
 package cs455.overlay.wireformats;
 
-public interface PROTOCOLS {
+public interface Protocols {
 	final int REGISTER_REQUEST = 0;
 	final int REGISTER_RESPONSE = 1;
 	final int	DEREGISTER_REQUEST = 2;

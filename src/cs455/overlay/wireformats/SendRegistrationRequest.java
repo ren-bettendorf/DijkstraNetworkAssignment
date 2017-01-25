@@ -14,6 +14,11 @@ public class SendRegistrationRequest implements IMessage, Protocols {
 	private String hostname;
 	private int port;
 	
+	public SendRegistrationRequest(String hostname, int port) {
+		this.hostname = hostname;
+		this.port = port;
+	}
+	
 	public SendRegistrationRequest(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		
@@ -58,5 +63,13 @@ public class SendRegistrationRequest implements IMessage, Protocols {
 		dout.close();
 		
 		return marshalledBytes;
+	}
+	
+	public String getHostname() {
+		return this.hostname;
+	}
+	
+	public int getPort() {
+		return this.port;
 	}
 }
