@@ -20,7 +20,7 @@ public class MessagingNode implements Node {
 		this.serverThread = serverThread;
 		setPort(serverThread.getPort());
 	}
-	
+
 	public void startServerThread() {
 		this.thread = new Thread(this.serverThread);
 		this.thread.start();
@@ -28,12 +28,14 @@ public class MessagingNode implements Node {
 
 	public void register(String registryHost, int registryPort) throws IOException {
 		System.out.println("Creating registration request...");
-		SendRegistrationRequest registrationRequest = new SendRegistrationRequest(InetAddress.getLocalHost().getHostAddress(), getPort());
-		
+		RegistrationRequest registrationRequest = new RegistrationRequest(InetAddress.getLocalHost().getHostAddress(),
+				getPort());
+
 		byte[] data = registrationRequest.getBytes();
 		System.out.println("Sending registration request...");
 		Socket socket = new Socket(registryHost, registryPort);
 		TCPConnection connection = new TCPConnection(this, socket);
+		connection.sendData(data);
 	}
 
 	public void setID(int ID) {
@@ -43,7 +45,7 @@ public class MessagingNode implements Node {
 	public int getPort() {
 		return this.port;
 	}
-	
+
 	public void setPort(int port) {
 		this.port = port;
 	}
@@ -52,14 +54,14 @@ public class MessagingNode implements Node {
 	public static void main(String[] args) {
 		String registryHost = null;
 		int registryPort = -1;
-		if(args.length != 2) {
+		if (args.length != 2) {
 			System.out.println("arg0 = registry_host and arg1=registry_port");
 			System.exit(1);
 		} else {
 			registryHost = args[0];
 			registryPort = Integer.parseInt(args[1]);
 		}
-		
+
 		MessagingNode mNode = null;
 		try {
 			mNode = new MessagingNode();
@@ -68,7 +70,7 @@ public class MessagingNode implements Node {
 			// Set portnumber to 0 so ServerSocket picks one
 			mNode.setServerThread(new TCPServerThread(0, mNode));
 			mNode.startServerThread();
-			
+
 			mNode.register(registryHost, registryPort);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -80,7 +82,7 @@ public class MessagingNode implements Node {
 	public String toString() {
 		try {
 			return InetAddress.getLocalHost().getHostAddress() + ":" + this.serverThread.getPort();
-		} catch(Exception e) {
+		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 		return null;
@@ -89,6 +91,11 @@ public class MessagingNode implements Node {
 	@Override
 	public void onEvent(Event event) throws IOException {
 		// TODO Auto-generated method stub
-
+		int eventType = event.getType();
+		switch (eventType) {
+		case Protocols.REGISTER_RESPONSE:
+			System.out.println("REGISTERED");
+			break;
+		}
 	}
 }

@@ -8,13 +8,19 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class WireFormatWidget implements Event {
+public class RegistrationResponse implements Event, Protocols {
 	private int type;
 	private long timestamp;
-	private String identifier;
-	private int tracker;
+	private byte response;
+	private String additionalInfo;
 	
-	public WireFormatWidget(byte[] marshalledBytes) throws IOException {
+	public RegistrationResponse(byte response, String additionalInfo) {
+		this.type = Protocols.REGISTER_RESPONSE;
+		this.response = response;
+		this.additionalInfo = additionalInfo;
+	}
+	
+	public RegistrationResponse(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
@@ -22,18 +28,19 @@ public class WireFormatWidget implements Event {
 		type = din.readInt();
 		timestamp = din.readLong();
 		
-		int identifierLength = din.readInt();
-		byte[] identifierBytes = new byte[identifierLength];
-		din.readFully(identifierBytes);
+		response = din.readByte();
 		
-		identifier = new String(identifierBytes);
+		int additonalInfoLength = din.readInt();
+		byte[] additionalInfoByteArray = new byte[additonalInfoLength];
+		din.readFully(additionalInfoByteArray);
 		
-		tracker = din.readInt();
+		additionalInfo = new String(additionalInfoByteArray);
 		
 		baInputStream.close();
 		din.close();
 	}
 	
+	@Override
 	public byte[] getBytes() throws IOException {
 		byte[] marshalledBytes = null;
 		
@@ -43,12 +50,12 @@ public class WireFormatWidget implements Event {
 		dout.writeInt(type);
 		dout.writeLong(timestamp);
 		
-		byte[] identifierBytes = identifier.getBytes();
-		int elementLength = identifierBytes.length;
-		dout.writeInt(elementLength);
-		dout.write(identifierBytes);
+		dout.writeByte(response);
 		
-		dout.writeInt(tracker);
+		byte[] additionalInfoByteArray = additionalInfo.getBytes();
+		int addiontalInfoLength = additionalInfoByteArray.length;
+		dout.writeInt(addiontalInfoLength);
+		dout.write(additionalInfoByteArray);
 		
 		dout.flush();
 		marshalledBytes = baOutputStream.toByteArray();
@@ -58,10 +65,10 @@ public class WireFormatWidget implements Event {
 		
 		return marshalledBytes;
 	}
-
+	
 	@Override
 	public int getType() {
 		// TODO Auto-generated method stub
-		return 0;
+		return this.type;
 	}
 }

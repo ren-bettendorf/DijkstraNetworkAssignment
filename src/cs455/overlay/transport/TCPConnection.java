@@ -16,7 +16,7 @@ public class TCPConnection {
 		this.node = node;
 		this.socket = socket;
 		this.tcpSender = new TCPSender(socket);
-		this.tcpReceiverThread = new TCPReceiverThread(socket);
+		this.tcpReceiverThread = new TCPReceiverThread(node, socket);
 		this.receiverThread = new Thread(this.tcpReceiverThread);
 		this.receiverThread.start();
 	}

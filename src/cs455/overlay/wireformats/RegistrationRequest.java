@@ -8,18 +8,19 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class SendRegistrationRequest implements IMessage, Protocols {
+public class RegistrationRequest implements Event, Protocols {
 	private int type;
 	private long timestamp;
 	private String hostname;
 	private int port;
 	
-	public SendRegistrationRequest(String hostname, int port) {
+	public RegistrationRequest(String hostname, int port) {
+		this.type = Protocols.REGISTER_REQUEST;
 		this.hostname = hostname;
 		this.port = port;
 	}
 	
-	public SendRegistrationRequest(byte[] marshalledBytes) throws IOException {
+	public RegistrationRequest(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
@@ -71,5 +72,11 @@ public class SendRegistrationRequest implements IMessage, Protocols {
 	
 	public int getPort() {
 		return this.port;
+	}
+
+	@Override
+	public int getType() {
+		// TODO Auto-generated method stub
+		return this.type;
 	}
 }
