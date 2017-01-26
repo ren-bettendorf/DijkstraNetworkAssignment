@@ -35,6 +35,8 @@ public class EventFactory  {
                     return new RegistrationRequest(data);
                 case Protocols.REGISTER_RESPONSE:
                 	return new RegistrationResponse(data);
+                case Protocols.DEREGISTER_REQUEST:
+                	return new DeregisterRequest(data);
                 default:
                 	return null;
             }

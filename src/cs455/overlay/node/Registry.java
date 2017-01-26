@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
+import cs455.overlay.wireformats.DeregisterRequest;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.Protocols;
 import cs455.overlay.wireformats.RegistrationRequest;
@@ -73,7 +74,7 @@ public class Registry implements Node {
 			registerNode(nodeHostPort);
 			
 			byte regResult = 1;
-			String response = "Registration request successful. The number of messaging nodes currently constituting the overlay is (" + nodesConnect + ")";
+			String response = "Registration request successful. The number of messaging nodes currently constituting the overlay is (" + registeredNodes.size() + ")";
 			System.out.println(response);
 			RegistrationResponse registrationResponse = new RegistrationResponse(regResult, response);
 			System.out.println("Creating registration response...");
@@ -85,10 +86,10 @@ public class Registry implements Node {
 			connection.sendData(registrationResponse.getBytes());
 			break;
 		case Protocols.DEREGISTER_REQUEST:
-			DeregistrationRequest request = (DeregistrationRequest) event;
+			DeregisterRequest derequest = (DeregisterRequest) event;
 			
-			System.out.println("Received a request from: " + request.getHostname() + ":" + request.getPort());
-			
+			System.out.println("Received a request from: " + derequest.getHostname() + ":" + derequest.getPort());
+			break;
 			
 			
 		}
