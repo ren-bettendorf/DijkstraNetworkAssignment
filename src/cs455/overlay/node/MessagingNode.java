@@ -36,6 +36,18 @@ public class MessagingNode implements Node {
 		this.connection = new TCPConnection(this, socket);
 		connection.sendData(data);
 	}
+	
+	public void deregister(String registryHost, int registryPort) throws IOException {
+		System.out.println("Creating registration request...");
+		DeregisterRequest deregisterRequest = new DeregisterRequest(InetAddress.getLocalHost().getHostAddress(),
+				getPort());
+
+		byte[] data = deregisterRequest.getBytes();
+		System.out.println("Sending registration request...");
+		Socket socket = new Socket(registryHost, registryPort);
+		this.connection = new TCPConnection(this, socket);
+		connection.sendData(data);
+	}
 
 	public void setID(int ID) {
 		this.nodeID = ID;
@@ -83,6 +95,8 @@ public class MessagingNode implements Node {
 			System.out.println("User input: " + userInput);
 			if(userInput.equals("exit-overlay")) {
 				this.connection.
+			} else if (userInput.equals("deregister")) {
+				deregister(registryHost, registryPort);
 			}
 		}
 	}
