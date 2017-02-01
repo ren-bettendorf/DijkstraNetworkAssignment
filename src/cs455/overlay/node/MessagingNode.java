@@ -10,7 +10,7 @@ import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.*;
 
 public class MessagingNode implements Node {
-	private int port, nodeID;
+	private int port;
 	private Socket registrySocket;
 	private TCPServerThread serverThread;
 	private Thread thread;
@@ -47,10 +47,6 @@ public class MessagingNode implements Node {
 		connection.sendData(data);
 	}
 
-	public void setID(int ID) {
-		this.nodeID = ID;
-	}
-
 	public int getPort() {
 		return this.port;
 	}
@@ -74,7 +70,6 @@ public class MessagingNode implements Node {
 		MessagingNode mNode = null;
 		try {
 			mNode = new MessagingNode();
-			mNode.setID(10);
 
 			// Set portnumber to 0 so ServerSocket picks one
 			mNode.startServerThread(new TCPServerThread(0, mNode));
