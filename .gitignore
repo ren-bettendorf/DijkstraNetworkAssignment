@@ -1,1 +1,6 @@
 bin/
+src/cs455/overlay/dijkstra/*.class
+src/cs455/overlay/node/*.class
+src/cs455/overlay/util/*.class
+src/cs455/overlay/transport/*.class
+src/cs455/overlay/wireformats/*.class
