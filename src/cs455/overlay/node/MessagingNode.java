@@ -11,6 +11,7 @@ import cs455.overlay.wireformats.*;
 
 public class MessagingNode implements Node {
 	private int port, nodeID;
+	private Socket registrySocket;
 	private TCPServerThread serverThread;
 	private Thread thread;
 	private TCPConnection connection;
@@ -27,25 +28,22 @@ public class MessagingNode implements Node {
 
 	public void register(String registryHost, int registryPort) throws IOException {
 		System.out.println("Creating registration request...");
-		RegistrationRequest registrationRequest = new RegistrationRequest(InetAddress.getLocalHost().getHostAddress(),
-				getPort());
+		RegistrationRequest registrationRequest = new RegistrationRequest(InetAddress.getLocalHost().getHostAddress(),getPort());
 
 		byte[] data = registrationRequest.getBytes();
 		System.out.println("Sending registration request...");
-		Socket socket = new Socket(registryHost, registryPort);
-		this.connection = new TCPConnection(this, socket);
+		registrySocket = new Socket(registryHost, registryPort);
+		this.connection = new TCPConnection(this, registrySocket);
 		connection.sendData(data);
 	}
 	
 	public void deregister(String registryHost, int registryPort) throws IOException {
 		System.out.println("Creating deregistration request...");
-		DeregisterRequest deregisterRequest = new DeregisterRequest(InetAddress.getLocalHost().getHostAddress(),
-				getPort());
+		DeregisterRequest deregisterRequest = new DeregisterRequest(InetAddress.getLocalHost().getHostAddress(),getPort());
 
 		byte[] data = deregisterRequest.getBytes();
 		System.out.println("Sending deregistration request...");
-		Socket socket = new Socket(registryHost, registryPort);
-		this.connection = new TCPConnection(this, socket);
+		this.connection = new TCPConnection(this, registrySocket);
 		connection.sendData(data);
 	}
 
@@ -104,6 +102,7 @@ public class MessagingNode implements Node {
 				}
 			}
 		}
+		keyboard.close();
 	}
 
 	@Override
@@ -125,5 +124,10 @@ public class MessagingNode implements Node {
 			System.out.println("REGISTERED");
 			break;
 		}
+	}
+	
+	public void close() {
+		this.serverThread.endThread();
+		
 	}
 }

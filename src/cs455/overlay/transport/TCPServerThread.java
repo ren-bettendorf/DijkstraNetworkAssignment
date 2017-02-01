@@ -11,6 +11,7 @@ public class TCPServerThread implements Runnable {
 	private int port;
 	private ServerSocket serverSocket;
 	private Node node;
+	private boolean runStatus;
 	
 	public TCPServerThread(int port, Node node) throws IOException {
 		this.node = node;
@@ -24,8 +25,8 @@ public class TCPServerThread implements Runnable {
 	
 	public void run() {
 		System.out.println("Starting thread for node: " + node.toString() + ". Listening on port: " + getPort());
-		
-		while(serverSocket != null) {
+		this.runStatus = true;
+		while(runStatus) {
 			try {
 				Socket socket = serverSocket.accept();
 				System.out.println("Connection is seen and accepted");
@@ -36,7 +37,12 @@ public class TCPServerThread implements Runnable {
 			break;
 			}
 		}
-		
+		try {
+			teardown();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.out.println("Ending thread for node: " + node.toString() + ". Closing on port: " + getPort());
 	}
 	
@@ -46,5 +52,14 @@ public class TCPServerThread implements Runnable {
 	
 	public ServerSocket getServerSocket() {
 		return this.serverSocket;
+	}
+	
+	public void endThread() {
+		this.runStatus = false;
+	}
+	
+	private void teardown() throws IOException {
+		this.serverSocket.close();
+		
 	}
 }

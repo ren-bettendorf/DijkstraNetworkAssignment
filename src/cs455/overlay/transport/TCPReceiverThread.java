@@ -14,6 +14,7 @@ public class TCPReceiverThread implements Runnable {
 	private Node node;
 	private Socket socket;
 	private DataInputStream din;
+	private boolean runStatus;
 	
 	public TCPReceiverThread(Node node, Socket socket) throws IOException {
 		this.node = node;
@@ -25,15 +26,15 @@ public class TCPReceiverThread implements Runnable {
 	@Override
 	public void run() {
 		int dataLength;
-		while(socket != null) {
+		this.runStatus = true;
+		while(runStatus) {
 			try {
 				dataLength = din.readInt();
 				
 				byte[] data = new byte[dataLength];
 				din.readFully(data, 0, dataLength);
-				
 				//System.out.println("TCPReceiverThread started with following data: " + data.toString());
-				Event event = EventFactory.getInstance().getEvent(data);
+				Event event = EventFactory.getInstance().getEvent(data, socket);
 				
 				node.onEvent(event);
 			} catch(SocketException se) {
@@ -44,6 +45,20 @@ public class TCPReceiverThread implements Runnable {
 				break;
 			}
 		}
- 		
+ 		try {
+			teardown();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void endThread() {
+		this.runStatus = false;
+	}
+	
+	private void teardown() throws IOException {
+		this.socket.close();
+		din.close();
 	}
 }

@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 
 // Singleton Instance
 public class EventFactory  {
@@ -19,7 +20,7 @@ public class EventFactory  {
 		return instance;
 	}
 	
-	public Event getEvent(byte[] data)
+	public Event getEvent(byte[] data, Socket socket)
 	{
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(data);
         DataInputStream din = new DataInputStream(new BufferedInputStream(
@@ -36,7 +37,7 @@ public class EventFactory  {
                 case Protocols.REGISTER_RESPONSE:
                 	return new RegistrationResponse(data);
                 case Protocols.DEREGISTER_REQUEST:
-                	return new DeregisterRequest(data);
+                	return new DeregisterRequest(data, socket);
                 default:
                 	return null;
             }

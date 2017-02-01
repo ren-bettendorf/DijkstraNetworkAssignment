@@ -7,12 +7,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 
 public class DeregisterRequest implements Event, Protocols {
 	private int type;
 	private long timestamp;
 	private String hostname;
 	private int port;
+	private Socket socket;
 	
 	public DeregisterRequest(String hostname, int port) {
 		this.type = Protocols.DEREGISTER_REQUEST;
@@ -20,7 +22,7 @@ public class DeregisterRequest implements Event, Protocols {
 		this.port = port;
 	}
 	
-	public DeregisterRequest(byte[] marshalledBytes) throws IOException {
+	public DeregisterRequest(byte[] marshalledBytes, Socket socket) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
@@ -35,7 +37,7 @@ public class DeregisterRequest implements Event, Protocols {
 		hostname = new String(hostnameBytes);
 		
 		port = din.readInt();
-		
+		this.socket = socket;
 		baInputStream.close();
 		din.close();
 	}
@@ -72,6 +74,10 @@ public class DeregisterRequest implements Event, Protocols {
 	
 	public int getPort() {
 		return this.port;
+	}
+	
+	public String getSocketAddress() {
+		return this.socket.getInetAddress().getHostAddress() +":" + this.socket.getPort();
 	}
 
 	@Override

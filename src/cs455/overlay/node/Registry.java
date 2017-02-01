@@ -2,8 +2,10 @@ package cs455.overlay.node;
 
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import cs455.overlay.transport.TCPConnection;
 import cs455.overlay.transport.TCPServerThread;
@@ -22,18 +24,6 @@ public class Registry implements Node {
 
 	public Registry(int port) {
 		this.port = port;
-	}
-
-	public void registerNode(String node) {
-		if (!registeredNodes.contains(node)) {
-			registeredNodes.add(node);
-		}
-	}
-
-	public void deregisterNode(String node) {
-		if (registeredNodes.contains(node)) {
-			registeredNodes.remove(node);
-		}
 	}
 
 	public void startServerThread(TCPServerThread serverThread) {
@@ -59,6 +49,16 @@ public class Registry implements Node {
 			System.exit(1);
 		}
 
+		Scanner keyboard = new Scanner(System.in);
+		System.out.println("Keyboard scanner ready for commands...");
+		String userInput = "";
+		while(!userInput.equals("close")) {
+			userInput = keyboard.nextLine();
+			if(userInput.equals("close")) {
+				registry.close();
+			}
+		}
+		keyboard.close();
 	}
 
 	@Override
@@ -68,32 +68,51 @@ public class Registry implements Node {
 		switch (eventType) {
 		case Protocols.REGISTER_REQUEST:
 			RegistrationRequest request = (RegistrationRequest) event;
-			String nodeHostPort = request.getHostname() + ":" + request.getPort();
-			System.out.println("Received a registration request from: " + nodeHostPort);
-			
-			registerNode(nodeHostPort);
-			
-			byte regResult = 1;
-			String response = "Registration request successful. The number of messaging nodes currently constituting the overlay is (" + registeredNodes.size() + ")";
-			System.out.println(response);
-			RegistrationResponse registrationResponse = new RegistrationResponse(regResult, response);
-			System.out.println("Creating registration response...");
-
-			Socket socket = new Socket(request.getHostname(),  request.getPort());
-			TCPConnection connection = new TCPConnection(this, socket);
-
-			System.out.println("Sending registration report...");
-			connection.sendData(registrationResponse.getBytes());
+			registerNode(request);
 			break;
 		case Protocols.DEREGISTER_REQUEST:
 			DeregisterRequest derequest = (DeregisterRequest) event;
-			
-			System.out.println("Received a request from: " + derequest.getHostname() + ":" + derequest.getPort());
+			deregisterNode(derequest);
 			break;
 			
 			
 		}
 
+	}
+
+	private void deregisterNode(DeregisterRequest derequest) {		
+		String node = derequest.getHostname() + ":" + derequest.getPort();
+		String nodeSocket = derequest.getSocketAddress();
+		System.out.println("Received a deregistration request from: " + node);
+		if(node.equals(nodeSocket) && registeredNodes.contains(node)) {
+			registeredNodes.remove(node);
+		}
+		
+	}
+
+	private void registerNode(RegistrationRequest request) throws UnknownHostException, IOException {
+		String nodeHostPort = request.getHostname() + ":" + request.getPort();
+		System.out.println("Received a registration request from: " + nodeHostPort);
+		byte regResult = 1;
+		String response = "";
+		if(!registeredNodes.contains(nodeHostPort)) {
+			registeredNodes.add(nodeHostPort);
+			response = "Registration request successful. The number of messaging nodes currently constituting the overlay is (" + registeredNodes.size() + ")";
+			
+		}else {
+			regResult = -1;
+			response = "Registration request unsuccessful. The number of messaging nodes currently constituting the overlay is (" + registeredNodes.size() + ")";
+		}
+		
+		System.out.println(response);
+		RegistrationResponse registrationResponse = new RegistrationResponse(regResult, response);
+		System.out.println("Creating registration response...");
+
+		Socket socket = new Socket(request.getHostname(),  request.getPort());
+		TCPConnection connection = new TCPConnection(this, socket);
+
+		System.out.println("Sending registration report...");
+		connection.sendData(registrationResponse.getBytes());
 	}
 
 	@Override
@@ -104,5 +123,10 @@ public class Registry implements Node {
 			System.out.println(e.getMessage());
 		}
 		return null;
+	}
+	
+	public void close() {
+		this.serverThread.endThread();
+		
 	}
 }
