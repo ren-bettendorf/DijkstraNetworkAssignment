@@ -23,8 +23,9 @@ public class RegistrationRequest implements Event, Protocols {
 	}
 	
 	public RegistrationRequest(byte[] marshalledBytes, Socket socket) throws IOException {
-		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
+		this.socket = socket;
 		
+		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 		
 		type = din.readInt();
@@ -37,7 +38,6 @@ public class RegistrationRequest implements Event, Protocols {
 		hostname = new String(hostnameBytes);
 		
 		port = din.readInt();
-		this.socket = socket;
 		baInputStream.close();
 		din.close();
 	}

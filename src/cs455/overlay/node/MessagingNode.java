@@ -42,7 +42,7 @@ public class MessagingNode implements Node {
 		DeregisterRequest deregisterRequest = new DeregisterRequest(InetAddress.getLocalHost().getHostAddress(),getPort());
 
 		byte[] data = deregisterRequest.getBytes();
-		System.out.println("Sending deregistration request...");
+		System.out.println("Sending deregistration request: " + InetAddress.getLocalHost().getHostAddress() + ":" + getPort());
 		this.connection = new TCPConnection(this, registrySocket);
 		connection.sendData(data);
 	}
@@ -85,7 +85,7 @@ public class MessagingNode implements Node {
 		String userInput = "";
 		while(!userInput.equals("exit-overlay")) {
 			userInput = keyboard.nextLine();
-			System.out.println("User input: " + userInput);
+			
 			if(userInput.equals("exit-overlay")) {
 				
 			} else if (userInput.equals("deregister")) {

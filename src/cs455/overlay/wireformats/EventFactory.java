@@ -20,11 +20,11 @@ public class EventFactory  {
 	public synchronized Event getEvent(byte[] data, Socket socket)
 	{
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(data);
-        DataInputStream din = new DataInputStream(new BufferedInputStream(
-                baInputStream));
+        DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 
         try {
             int type = din.readInt();
+            System.out.println("Received message of type: " + type);
             baInputStream.close();
             din.close();
 

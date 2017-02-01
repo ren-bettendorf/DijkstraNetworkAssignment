@@ -44,6 +44,7 @@ public class TCPReceiverThread implements Runnable {
 				System.out.println(ioe.getMessage());
 				break;
 			}
+			
 		}
  		try {
 			teardown();
