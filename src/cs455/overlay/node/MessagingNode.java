@@ -116,12 +116,14 @@ public class MessagingNode implements Node {
 	}
 
 	@Override
-	public void onEvent(Event event) throws IOException {
+	public synchronized void onEvent(Event event) throws IOException {
 		// TODO Auto-generated method stub
 		int eventType = event.getType();
 		switch (eventType) {
 		case Protocols.REGISTER_RESPONSE:
-			System.out.println("REGISTERED");
+			RegistrationResponse response = (RegistrationResponse)event;
+			//if()
+			System.out.println(response.getResponse());
 			break;
 		}
 	}

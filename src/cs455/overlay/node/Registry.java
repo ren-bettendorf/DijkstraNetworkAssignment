@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import cs455.overlay.transport.TCPConnection;
@@ -18,7 +19,7 @@ import cs455.overlay.wireformats.RegistrationResponse;
 public class Registry implements Node {
 
 	private int port;
-	private ArrayList<String> registeredNodes = new ArrayList<String>();
+	private HashMap<String, TCPConnection> messageNodeConnections = new HashMap<String, TCPConnection>();
 	private TCPServerThread serverThread;
 	private Thread thread;
 
@@ -62,7 +63,7 @@ public class Registry implements Node {
 	}
 
 	@Override
-	public void onEvent(Event event) throws IOException {
+	public synchronized void onEvent(Event event) throws IOException {
 		// TODO Auto-generated method stub
 		int eventType = event.getType();
 		switch (eventType) {
@@ -84,10 +85,14 @@ public class Registry implements Node {
 		String node = derequest.getHostname() + ":" + derequest.getPort();
 		String nodeSocket = derequest.getSocketAddress();
 		System.out.println("Received a deregistration request from: " + node);
-		if(node.equals(nodeSocket) && registeredNodes.contains(node)) {
-			registeredNodes.remove(node);
+		String response = "";
+		if(node.equals(nodeSocket) && messageNodeConnections.containsKey(node)) {
+			messageNodeConnections.remove(node);
+			response = "Registration request successful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
+		}else {
+			response = "Registration request unsuccessful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
 		}
-		
+		System.out.println(response);
 	}
 
 	private void registerNode(RegistrationRequest request) throws UnknownHostException, IOException {
@@ -95,21 +100,22 @@ public class Registry implements Node {
 		System.out.println("Received a registration request from: " + nodeHostPort);
 		byte regResult = 1;
 		String response = "";
-		if(!registeredNodes.contains(nodeHostPort)) {
-			registeredNodes.add(nodeHostPort);
-			response = "Registration request successful. The number of messaging nodes currently constituting the overlay is (" + registeredNodes.size() + ")";
+
+		Socket socket = request.getSocket();
+		TCPConnection connection = new TCPConnection(this, socket);
+		if(!messageNodeConnections.containsKey(nodeHostPort)) {
+			messageNodeConnections.put(nodeHostPort, connection);
+			response = "Registration request successful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
 			
 		}else {
 			regResult = -1;
-			response = "Registration request unsuccessful. The number of messaging nodes currently constituting the overlay is (" + registeredNodes.size() + ")";
+			response = "Registration request unsuccessful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
 		}
 		
 		System.out.println(response);
 		RegistrationResponse registrationResponse = new RegistrationResponse(regResult, response);
 		System.out.println("Creating registration response...");
 
-		Socket socket = new Socket(request.getHostname(),  request.getPort());
-		TCPConnection connection = new TCPConnection(this, socket);
 
 		System.out.println("Sending registration report...");
 		connection.sendData(registrationResponse.getBytes());

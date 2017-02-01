@@ -21,7 +21,7 @@ public class TCPConnection {
 		this.receiverThread.start();
 	}
 	
-	public void sendData(byte[] dataToSend) throws IOException {
+	public synchronized void sendData(byte[] dataToSend) throws IOException {
 		this.tcpSender.sendData(dataToSend);
 	}
 	

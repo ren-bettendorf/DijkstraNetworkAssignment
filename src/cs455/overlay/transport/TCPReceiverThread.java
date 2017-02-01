@@ -24,7 +24,7 @@ public class TCPReceiverThread implements Runnable {
 	
 	
 	@Override
-	public void run() {
+	public synchronized void run() {
 		int dataLength;
 		this.runStatus = true;
 		while(runStatus) {
@@ -33,7 +33,7 @@ public class TCPReceiverThread implements Runnable {
 				
 				byte[] data = new byte[dataLength];
 				din.readFully(data, 0, dataLength);
-				//System.out.println("TCPReceiverThread started with following data: " + data.toString());
+				
 				Event event = EventFactory.getInstance().getEvent(data, socket);
 				
 				node.onEvent(event);

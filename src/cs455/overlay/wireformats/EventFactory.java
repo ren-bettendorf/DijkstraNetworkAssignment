@@ -20,7 +20,7 @@ public class EventFactory  {
 		return instance;
 	}
 	
-	public Event getEvent(byte[] data, Socket socket)
+	public synchronized Event getEvent(byte[] data, Socket socket)
 	{
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(data);
         DataInputStream din = new DataInputStream(new BufferedInputStream(
@@ -33,11 +33,13 @@ public class EventFactory  {
 
             switch (type) {
                 case Protocols.REGISTER_REQUEST:
-                    return new RegistrationRequest(data);
+                    return new RegistrationRequest(data, socket);
                 case Protocols.REGISTER_RESPONSE:
                 	return new RegistrationResponse(data);
                 case Protocols.DEREGISTER_REQUEST:
                 	return new DeregisterRequest(data, socket);
+                case Protocols.ERROR_STATUS:
+                	return new RegistrationResponse(data);
                 default:
                 	return null;
             }

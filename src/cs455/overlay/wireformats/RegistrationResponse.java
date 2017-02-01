@@ -11,12 +11,12 @@ import java.io.IOException;
 public class RegistrationResponse implements Event, Protocols {
 	private int type;
 	private long timestamp;
-	private byte response;
+	private byte result;
 	private String additionalInfo;
 	
 	public RegistrationResponse(byte response, String additionalInfo) {
 		this.type = Protocols.REGISTER_RESPONSE;
-		this.response = response;
+		this.result = response;
 		this.additionalInfo = additionalInfo;
 	}
 	
@@ -28,7 +28,7 @@ public class RegistrationResponse implements Event, Protocols {
 		type = din.readInt();
 		timestamp = din.readLong();
 		
-		response = din.readByte();
+		this.result = din.readByte();
 		
 		int additonalInfoLength = din.readInt();
 		byte[] additionalInfoByteArray = new byte[additonalInfoLength];
@@ -50,7 +50,7 @@ public class RegistrationResponse implements Event, Protocols {
 		dout.writeInt(type);
 		dout.writeLong(timestamp);
 		
-		dout.writeByte(response);
+		dout.writeByte(result);
 		
 		byte[] additionalInfoByteArray = additionalInfo.getBytes();
 		int addiontalInfoLength = additionalInfoByteArray.length;
@@ -64,6 +64,14 @@ public class RegistrationResponse implements Event, Protocols {
 		dout.close();
 		
 		return marshalledBytes;
+	}
+	
+	public byte getResult() {
+		return this.result;
+	}
+	
+	public String getResponse() {
+		return this.additionalInfo;
 	}
 	
 	@Override
