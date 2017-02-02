@@ -128,10 +128,42 @@ public class MessagingNode implements Node {
 		switch (eventType) {
 		case Protocols.REGISTER_RESPONSE:
 			RegistrationResponse response = (RegistrationResponse)event;
-			//if()
 			System.out.println(response.getResponse());
 			break;
+		case Protocols.MESSAGING_NODES_LIST:
+			MessagingNodesList nodesList = (MessagingNodesList)event;
+			System.out.println("Received MessagingNodesList");
+			setMessagingNodesList(nodesList);
+			break;
+		case Protocols.LINK_WEIGHTS:
+			LinkWeights linkWeights = (LinkWeights)event;
+			System.out.println("Received LinkWeights");
+			setLinkWeights(linkWeights);
+			break;
 		}
+	}
+	
+	private void setMessagingNodesList(MessagingNodesList nodeList) {
+		String[] list = nodeList.getConnectList().split("\n");
+		for(int index = 0; index < nodeList.getNumberNodes(); index++) {
+			try {
+				String[] splitInfo = list[index].split(":");
+				Socket socket = new Socket(splitInfo[0], Integer.parseInt(splitInfo[1]));
+				
+				TCPSender sender = new TCPSender(socket);
+				messageNodeConnections.put(list[index], sender);
+			} catch (IOException e) {
+					// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+				
+			
+		}
+		System.out.println("All connections are established. Number of connections: " + nodeList.getNumberNodes());
+	}
+	
+	private void setLinkWeights(LinkWeights linkWeights) {
+		
 	}
 	
 	public void close() {

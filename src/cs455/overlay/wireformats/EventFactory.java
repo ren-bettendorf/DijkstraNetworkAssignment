@@ -35,6 +35,10 @@ public class EventFactory  {
                 	return new RegistrationResponse(data);
                 case Protocols.DEREGISTER_REQUEST:
                 	return new DeregisterRequest(data, socket);
+                case Protocols.MESSAGING_NODES_LIST:
+                	return new MessagingNodesList(data);
+                case Protocols.LINK_WEIGHTS:
+                	return new LinkWeights(data);
                 default:
                 	return null;
             }
