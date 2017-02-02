@@ -79,15 +79,20 @@ public class Registry implements Node {
 	}
 
 	private synchronized void deregisterNode(DeregisterRequest derequest) {		
-		String node = derequest.getHostname() + ":" + derequest.getPort();
-		String nodeSocket = derequest.getSocketAddress();
-		System.out.println("Received a deregistration request from: " + node + " and SOCKET: " + nodeSocket);
+		String node = derequest.getFullHost();
+		Socket nodeSocket = derequest.getSocket();
+		System.out.println("Received a deregistration request from: " + node);
 		String response = "";
-		if(node.equals(nodeSocket) && messageNodeConnections.containsKey(node)) {
-			messageNodeConnections.remove(node);
-			response = "Deregistration request successful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
+		if(messageNodeConnections.containsKey(node)) {
+			Socket socket = messageNodeConnections.get(node).getSocket();
+			if(nodeSocket.equals(socket)) {
+				messageNodeConnections.remove(node);
+				response = "Deregistration request successful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
+			} else {
+				response = "Deregistration request unsuccessful. Couldn't verify sender IP matched with cached sender IP";
+			}
 		}else {
-			response = "Deregistration request unsuccessful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
+			response = "Deregistration request unsuccessful. Node isn't registered already";
 		}
 		System.out.println(response);
 	}

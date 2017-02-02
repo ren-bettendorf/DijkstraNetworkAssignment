@@ -73,6 +73,14 @@ public class DeregisterRequest implements Event, Protocols {
 		return this.port;
 	}
 	
+	public String getFullHost() {
+		return getHostname() + ":" + getPort();
+	}
+	
+	public Socket getSocket() {
+		return this.socket;
+	}
+	
 	public String getSocketAddress() {
 		return this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort();
 	}
