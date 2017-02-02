@@ -10,23 +10,20 @@ import java.io.IOException;
 
 public class RegistrationResponse implements Event, Protocols {
 	private int type;
-	private long timestamp;
 	private byte result;
 	private String additionalInfo;
 	
-	public RegistrationResponse(byte response, String additionalInfo) {
+	public RegistrationResponse(byte result, String additionalInfo) {
 		this.type = Protocols.REGISTER_RESPONSE;
-		this.result = response;
+		this.result = result;
 		this.additionalInfo = additionalInfo;
 	}
 	
 	public RegistrationResponse(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
-		
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 		
 		type = din.readInt();
-		timestamp = din.readLong();
 		
 		this.result = din.readByte();
 		
@@ -48,7 +45,6 @@ public class RegistrationResponse implements Event, Protocols {
 		DataOutputStream dout = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 		
 		dout.writeInt(type);
-		dout.writeLong(timestamp);
 		
 		dout.writeByte(result);
 		

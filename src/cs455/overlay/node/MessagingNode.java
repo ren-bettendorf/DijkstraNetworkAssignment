@@ -3,20 +3,25 @@ package cs455.overlay.node;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Scanner;
 
-import cs455.overlay.transport.TCPConnection;
+import cs455.overlay.transport.TCPReceiverThread;
+import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.*;
 
 public class MessagingNode implements Node {
 	private int port;
 	private Socket registrySocket;
+	private TCPSender registrySender;
+	private TCPReceiverThread receiverThread;
 	private TCPServerThread serverThread;
 	private Thread thread;
-	private TCPConnection connection;
+	private HashMap<String, TCPSender> messageNodeConnections;
 
 	public MessagingNode() throws IOException {
+		messageNodeConnections = new HashMap<String, TCPSender>();
 	}
 
 	private void startServerThread(TCPServerThread serverThread) {
@@ -30,21 +35,21 @@ public class MessagingNode implements Node {
 		System.out.println("Creating registration request...");
 		RegistrationRequest registrationRequest = new RegistrationRequest(InetAddress.getLocalHost().getHostAddress(),getPort());
 
-		byte[] data = registrationRequest.getBytes();
 		System.out.println("Sending registration request...");
 		registrySocket = new Socket(registryHost, registryPort);
-		this.connection = new TCPConnection(this, registrySocket);
-		connection.sendData(data);
+		registrySender = new TCPSender(registrySocket);
+		receiverThread = new TCPReceiverThread(this, registrySocket);
+		Thread tcpReceiverThread = new Thread(this.receiverThread);
+		tcpReceiverThread.start();
+		registrySender.sendData(registrationRequest.getBytes());
 	}
 	
 	public void deregister(String registryHost, int registryPort) throws IOException {
 		System.out.println("Creating deregistration request...");
 		DeregisterRequest deregisterRequest = new DeregisterRequest(InetAddress.getLocalHost().getHostAddress(),getPort());
 
-		byte[] data = deregisterRequest.getBytes();
-		System.out.println("Sending deregistration request: " + InetAddress.getLocalHost().getHostAddress() + ":" + getPort());
-		this.connection = new TCPConnection(this, registrySocket);
-		connection.sendData(data);
+		System.out.println("Sending deregistration request....");
+		registrySender.sendData(deregisterRequest.getBytes());
 	}
 
 	public int getPort() {
@@ -93,6 +98,12 @@ public class MessagingNode implements Node {
 					mNode.deregister(registryHost, registryPort);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else if (userInput.equals("register")) {
+				try {
+					mNode.register(registryHost, registryPort);
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}

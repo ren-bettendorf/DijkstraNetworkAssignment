@@ -11,7 +11,6 @@ import java.net.Socket;
 
 public class DeregisterRequest implements Event, Protocols {
 	private int type;
-	private long timestamp;
 	private String hostname;
 	private int port;
 	private Socket socket;
@@ -29,7 +28,6 @@ public class DeregisterRequest implements Event, Protocols {
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 		
 		type = din.readInt();
-		timestamp = din.readLong();
 		
 		int hostnameLength = din.readInt();
 		byte[] hostnameBytes = new byte[hostnameLength];
@@ -50,7 +48,6 @@ public class DeregisterRequest implements Event, Protocols {
 		DataOutputStream dout = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 		
 		dout.writeInt(type);
-		dout.writeLong(timestamp);
 		
 		byte[] hostnameBytes = hostname.getBytes();
 		int hostnameLength = hostnameBytes.length;

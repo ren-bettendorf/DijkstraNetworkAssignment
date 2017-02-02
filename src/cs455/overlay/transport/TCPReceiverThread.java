@@ -14,7 +14,6 @@ public class TCPReceiverThread implements Runnable {
 	private Node node;
 	private Socket socket;
 	private DataInputStream din;
-	private boolean runStatus;
 	
 	public TCPReceiverThread(Node node, Socket socket) throws IOException {
 		this.node = node;
@@ -24,10 +23,9 @@ public class TCPReceiverThread implements Runnable {
 	
 	
 	@Override
-	public synchronized void run() {
+	public void run() {
 		int dataLength;
-		this.runStatus = true;
-		while(runStatus) {
+		while(socket != null) {
 			try {
 				dataLength = din.readInt();
 				
@@ -54,9 +52,6 @@ public class TCPReceiverThread implements Runnable {
 		}
 	}
 	
-	public void endThread() {
-		this.runStatus = false;
-	}
 	
 	private void teardown() throws IOException {
 		this.socket.close();
