@@ -3,9 +3,11 @@ package cs455.overlay.node;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import cs455.overlay.dijkstra.Vertex;
 import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.DeregisterRequest;
@@ -127,6 +129,13 @@ public class Registry implements Node {
 
 		System.out.println("Sending registration report...");
 		sender.sendData(registrationResponse.getBytes());
+	}
+	
+	private void setupOverlay(int connectionsRequired) {
+		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
+		for(String node : (String[])messageNodeConnections.keySet().toArray()) {
+			vertices.add(new Vertex(node, connectionsRequired));
+		}
 	}
 
 
