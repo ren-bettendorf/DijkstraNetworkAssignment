@@ -8,30 +8,30 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class TaskComplete implements Event, Protocols {
+public class DeregisterResponse implements Event, Protocols {
 	private int type;
-	private String hostname;
-	private int port;
+	private String response;
+	private byte result;
 	
-	public TaskComplete(String hostname, int port) {
-		this.type = Protocols.TASK_COMPLETE;
-		this.hostname = hostname;
-		this.port = port;
+	public DeregisterResponse(byte result, String response) {
+		this.type = Protocols.DEREGISTER_RESPONSE;
+		this.result = result;
+		this.response = response;
 	}
 	
-	public TaskComplete(byte[] marshalledBytes) throws IOException {
+	public DeregisterResponse(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 		
 		type = din.readInt();
+
+		result = din.readByte();
+		int responseLength = din.readInt();
+		byte[] responseBytes = new byte[responseLength];
+		din.readFully(responseBytes);
 		
-		int hostnameLength = din.readInt();
-		byte[] hostnameBytes = new byte[hostnameLength];
-		din.readFully(hostnameBytes);
+		response = new String(responseBytes);
 		
-		hostname = new String(hostnameBytes);
-		
-		port = din.readInt();
 		baInputStream.close();
 		din.close();
 	}
@@ -44,13 +44,12 @@ public class TaskComplete implements Event, Protocols {
 		DataOutputStream dout = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 		
 		dout.writeInt(type);
+
+		dout.writeByte(result);
 		
-		byte[] hostnameBytes = hostname.getBytes();
-		int hostnameLength = hostnameBytes.length;
-		dout.writeInt(hostnameLength);
-		dout.write(hostnameBytes);
-		
-		dout.writeInt(port);
+		byte[] responseBytes = response.getBytes();
+		dout.writeInt(responseBytes.length);
+		dout.write(responseBytes);
 		
 		dout.flush();
 		marshalledBytes = baOutputStream.toByteArray();
@@ -61,6 +60,13 @@ public class TaskComplete implements Event, Protocols {
 		return marshalledBytes;
 	}
 	
+	public String getResponse() {
+		return this.response;
+	}
+	
+	public byte getPort() {
+		return this.result;
+	}
 	@Override
 	public int getType() {
 		// TODO Auto-generated method stub

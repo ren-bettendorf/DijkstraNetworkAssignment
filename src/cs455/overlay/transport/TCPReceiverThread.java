@@ -54,7 +54,7 @@ public class TCPReceiverThread implements Runnable {
 	
 	
 	private void teardown() throws IOException {
-		this.socket.close();
 		din.close();
+		this.socket.close();
 	}
 }
