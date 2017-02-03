@@ -1,6 +1,5 @@
 package cs455.overlay.node;
 
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.IOException;
@@ -10,6 +9,7 @@ import java.util.Scanner;
 import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.DeregisterRequest;
+import cs455.overlay.wireformats.DeregisterResponse;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.Protocols;
 import cs455.overlay.wireformats.RegistrationRequest;
@@ -32,9 +32,6 @@ public class Registry implements Node {
 		this.thread.start();
 	}
 
-	public int getPort() {
-		return this.port;
-	}
 
 	// java cs455.overlay.node.Registry local_port
 	public static void main(String[] args) {
@@ -54,9 +51,7 @@ public class Registry implements Node {
 		String userInput = "";
 		while(!userInput.equals("close")) {
 			userInput = keyboard.nextLine();
-			if(userInput.equals("close")) {
-				registry.close();
-			}
+			
 		}
 		keyboard.close();
 	}
@@ -83,18 +78,29 @@ public class Registry implements Node {
 		Socket nodeSocket = derequest.getSocket();
 		System.out.println("Received a deregistration request from: " + node);
 		String response = "";
+		byte result = 1;
 		if(messageNodeConnections.containsKey(node)) {
 			Socket socket = messageNodeConnections.get(node).getSocket();
 			if(nodeSocket.equals(socket)) {
 				messageNodeConnections.remove(node);
 				response = "Deregistration request successful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
 			} else {
+				result = 0;
 				response = "Deregistration request unsuccessful. Couldn't verify sender IP matched with cached sender IP";
 			}
+			TCPSender sender = messageNodeConnections.get(node);
+			try {
+				sender.sendData((new DeregisterResponse(result, response)).getBytes());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}else {
+			result = 0;
 			response = "Deregistration request unsuccessful. Node isn't registered already";
 		}
 		System.out.println(response);
+		
 	}
 
 	private synchronized void registerNode(RegistrationRequest request) throws UnknownHostException, IOException {
@@ -123,18 +129,8 @@ public class Registry implements Node {
 		sender.sendData(registrationResponse.getBytes());
 	}
 
-	@Override
-	public String toString() {
-		try {
-			return InetAddress.getLocalHost().getHostAddress() + ":" + this.serverThread.getPort();
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-		return null;
-	}
-	
-	public void close() {
-		this.serverThread.endThread();
-		
+
+	public int getPort() {
+		return this.port;
 	}
 }
