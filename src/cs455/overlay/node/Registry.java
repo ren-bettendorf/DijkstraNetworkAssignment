@@ -26,6 +26,7 @@ public class Registry implements Node {
 	private HashMap<String, TCPSender> messageNodeConnections = new HashMap<String, TCPSender>();
 	private TCPServerThread serverThread;
 	private Thread thread;
+	private Graph graph;
 
 	public Registry(int port) {
 		try {
@@ -65,9 +66,15 @@ public class Registry implements Node {
 			if(userInput.equals("setup-overlay")) {
 				System.out.println("Creating overlay setup...");
 				registry.setupOverlay(4);
+			}else if(userInput.equals("assign")) {
+				registry.assignWeights();
 			}
 		}
 		keyboard.close();
+	}
+
+	public void assignWeights() {
+		this.graph.assignWeights();
 	}
 
 	@Override
@@ -150,9 +157,11 @@ public class Registry implements Node {
 			vertices.add(new Vertex(node, connectionsRequired));
 		}
 		
-		Graph graph = new Graph(vertices);
+		this.graph = new Graph(vertices);
 		graph.setupOverlay(connectionsRequired);
 	}
+	
+	
 
 
 	public int getPort() {

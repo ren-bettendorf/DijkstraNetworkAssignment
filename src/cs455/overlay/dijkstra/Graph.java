@@ -12,11 +12,18 @@ public class Graph {
 		this.edges = new ArrayList<Edge>();
 	}
 	
+	public void assignWeights() {
+		for(Edge e : edges) {
+			e.setWeight((int)Math.floor(Math.random()*10) + 1);
+			System.out.println("Assigned "+e.toString());
+		}
+	}
+	
 	public void setupOverlay(int connectionsRequired) {
 		possibleVertices = (ArrayList<Vertex>) vertices.clone();
 		setupFirstRoundConnections();
 		int count = 0;
-		while(possibleVertices.size() > 1) {
+		while(!possibleVertices.isEmpty()) {
 			count++;
 			System.out.println("[Iteration "+count+"] Size: "+possibleVertices.size());
 			Vertex first = possibleVertices.get((int)Math.floor(Math.random()*possibleVertices.size()));
@@ -37,6 +44,9 @@ public class Graph {
 			if(second.getNumberConnection() == connectionsRequired) {
 				System.out.println("Removing " + second.toString() + " due to max connections: " + second.getNumberConnection());
 				possibleVertices.remove(second);
+			}
+			if(possibleVertices.size() == 1) {
+				possibleVertices = (ArrayList<Vertex>) vertices.clone();
 			}
 		}
 	}
