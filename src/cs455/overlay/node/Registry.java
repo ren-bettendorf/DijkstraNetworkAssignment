@@ -1,5 +1,6 @@
 package cs455.overlay.node;
 
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import cs455.overlay.dijkstra.Graph;
 import cs455.overlay.dijkstra.Vertex;
 import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
@@ -20,11 +22,18 @@ import cs455.overlay.wireformats.RegistrationResponse;
 public class Registry implements Node {
 
 	private int port;
+	private String host;
 	private HashMap<String, TCPSender> messageNodeConnections = new HashMap<String, TCPSender>();
 	private TCPServerThread serverThread;
 	private Thread thread;
 
 	public Registry(int port) {
+		try {
+			this.host = InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.port = port;
 	}
 
@@ -53,7 +62,10 @@ public class Registry implements Node {
 		String userInput = "";
 		while(!userInput.equals("close")) {
 			userInput = keyboard.nextLine();
-			
+			if(userInput.equals("setup-overlay")) {
+				System.out.println("Creating overlay setup...");
+				registry.setupOverlay(4);
+			}
 		}
 		keyboard.close();
 	}
@@ -132,14 +144,23 @@ public class Registry implements Node {
 	}
 	
 	private void setupOverlay(int connectionsRequired) {
+		// Add a vertex for each node in node map
 		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
-		for(String node : (String[])messageNodeConnections.keySet().toArray()) {
+		for(String node : messageNodeConnections.keySet()) {
 			vertices.add(new Vertex(node, connectionsRequired));
 		}
+		
+		Graph graph = new Graph(vertices);
+		graph.setupOverlay(connectionsRequired);
 	}
 
 
 	public int getPort() {
 		return this.port;
+	}
+	
+	@Override
+	public String toString() {
+		return this.host;
 	}
 }

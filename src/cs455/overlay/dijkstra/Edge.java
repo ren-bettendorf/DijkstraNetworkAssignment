@@ -1,19 +1,16 @@
 package cs455.overlay.dijkstra;
 
 public class Edge {
-	private String id;
 	private Vertex source, destination;
 	private int weight;
 
-	public Edge(String id, Vertex source, Vertex destination, int weight) {
-		this.id = id;
+	public Edge(Vertex source, Vertex destination) {
 		this.source = source;
 		this.destination = destination;
-		this.weight = weight;
 	}
-
-	public String getID() {
-		return this.id;
+	
+	public void setWeight(int weight) {
+		this.weight = weight;
 	}
 
 	public Vertex getDestination() {
@@ -26,5 +23,10 @@ public class Edge {
 
 	public int getWeight() {
 		return this.weight;
+	}
+	
+	@Override
+	public String toString() {
+		return source.toString()+":"+destination.toString()+" "+weight;
 	}
 }
