@@ -24,23 +24,32 @@ public class EventFactory  {
 
         try {
             int type = din.readInt();
-            System.out.println("Received message of type: " + type);
+            
             baInputStream.close();
             din.close();
 
             switch (type) {
                 case Protocols.REGISTER_REQUEST:
-                    return new RegistrationRequest(data, socket);
+			System.out.println("Returned Registration Request");
+	        	return new RegistrationRequest(data, socket);
                 case Protocols.REGISTER_RESPONSE:
+			System.out.println("Returned Registraion Response");
                 	return new RegistrationResponse(data);
                 case Protocols.DEREGISTER_REQUEST:
+			System.out.println("Returned Deregistration Request");
                 	return new DeregisterRequest(data, socket);
+		case Protocols.DEREGISTER_RESPONSE:
+			System.out.println("Returned Deregistration Response");
+			return new DeregisterResponse(data);
                 case Protocols.MESSAGING_NODES_LIST:
+			System.out.println("Returned MessagingNodesList");
                 	return new MessagingNodesList(data);
                 case Protocols.LINK_WEIGHTS:
+			System.out.println("Returned Link Weights");
                 	return new LinkWeights(data);
                 default:
-                	return null;
+            		System.out.println("Returned default null");
+		    	return null;
             }
         } catch (IOException ioe) {
         	ioe.printStackTrace();

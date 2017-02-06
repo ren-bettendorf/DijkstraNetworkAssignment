@@ -94,7 +94,7 @@ public class Registry implements Node {
 
 	}
 
-	private synchronized void deregisterNode(DeregisterRequest derequest) {		
+	private void deregisterNode(DeregisterRequest derequest) {		
 		String node = derequest.getFullHost();
 		Socket nodeSocket = derequest.getSocket();
 		System.out.println("Received a deregistration request from: " + node);
@@ -102,6 +102,7 @@ public class Registry implements Node {
 		byte result = 1;
 		if(messageNodeConnections.containsKey(node)) {
 			Socket socket = messageNodeConnections.get(node).getSocket();
+			TCPSender sender = messageNodeConnections.get(node);
 			if(nodeSocket.equals(socket)) {
 				messageNodeConnections.remove(node);
 				response = "Deregistration request successful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
@@ -109,7 +110,7 @@ public class Registry implements Node {
 				result = 0;
 				response = "Deregistration request unsuccessful. Couldn't verify sender IP matched with cached sender IP";
 			}
-			TCPSender sender = messageNodeConnections.get(node);
+			
 			try {
 				sender.sendData((new DeregisterResponse(result, response)).getBytes());
 			} catch (IOException e) {
