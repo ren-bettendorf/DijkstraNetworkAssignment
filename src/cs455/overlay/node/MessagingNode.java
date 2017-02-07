@@ -130,6 +130,11 @@ public class MessagingNode implements Node {
 			RegistrationResponse response = (RegistrationResponse)event;
 			System.out.println(response.getResponse());
 			break;
+		case Protocols.DEREGISTER_RESPONSE:
+			DeregisterResponse deregister = (DeregisterResponse)event;
+			System.out.println(deregister.getResponse());
+			
+			break;
 		case Protocols.MESSAGING_NODES_LIST:
 			MessagingNodesList nodesList = (MessagingNodesList)event;
 			System.out.println("Received MessagingNodesList");
