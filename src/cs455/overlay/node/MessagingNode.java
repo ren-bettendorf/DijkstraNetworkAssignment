@@ -168,6 +168,8 @@ public class MessagingNode implements Node {
 	}
 	
 	private void setLinkWeights(LinkWeights linkWeights) {
+		int numberLinks = linkWeights.getNumberLinks();
+		String[] edges = linkWeights.getListWeights().split("\n");
 		
 	}
 	

@@ -68,5 +68,22 @@ public class Graph {
 	public ArrayList<Edge> getEdges() {
 		return this.edges;
 	}
+
+	public void listWeights() {
+		for(Edge edge : edges) {
+			System.out.println(edge.toString());
+		}
+	}
+
+	public String marshallEdgeString() {
+		String ret = "";
+		
+		for(Edge edge : edges) {
+			ret += edge.toString() + "\n";
+		}
+		
+		
+		return ret;
+	}
 	
 }
