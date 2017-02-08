@@ -27,6 +27,6 @@ public class Edge {
 	
 	@Override
 	public String toString() {
-		return source.toString()+":"+destination.toString()+" "+weight;
+		return source.toString()+" "+destination.toString()+" "+weight;
 	}
 }

@@ -62,6 +62,14 @@ public class LinkWeights implements Event, Protocols {
 		
 		return marshalledBytes;
 	}
+	
+	public int getNumberLinks() {
+		return this.numberLinks;
+	}
+	
+	public String getListWeights() {
+		return this.connectList;
+	}
 
 	@Override
 	public int getType() {

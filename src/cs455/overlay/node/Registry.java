@@ -15,6 +15,7 @@ import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.DeregisterRequest;
 import cs455.overlay.wireformats.DeregisterResponse;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.Protocols;
 import cs455.overlay.wireformats.RegistrationRequest;
 import cs455.overlay.wireformats.RegistrationResponse;
@@ -64,13 +65,45 @@ public class Registry implements Node {
 		while(!userInput.equals("close")) {
 			userInput = keyboard.nextLine();
 			if(userInput.equals("setup-overlay")) {
-				System.out.println("Creating overlay setup...");
-				registry.setupOverlay(4);
+				if(registry.getNodesConnectedSize() >= 10) {
+					System.out.println("Creating overlay setup...");
+					registry.setupOverlay(4);
+				}else {
+					System.out.println("Can't create overlay due to insufficient nodes: " + registry.getNodesConnectedSize());
+				}
 			}else if(userInput.equals("assign")) {
 				registry.assignWeights();
+			}else if(userInput.equals("list-weights")) {
+				registry.setListWeights();
+			}else if(userInput.equals("send-overlay-link-weights")) {
+				registry.sendLinkWeights();
+			}else if(userInput.equals("list-messaging-nodes")) {
+				registry.listNodes();
 			}
 		}
 		keyboard.close();
+	}
+
+	public void listNodes() {
+		for(String s : messageNodeConnections.keySet()) {
+			System.out.println(s);
+		}
+	}
+
+	public void sendLinkWeights() {
+		LinkWeights linkWeights = new LinkWeights(this.graph.getEdges().size(),this.graph.marshallEdgeString());
+		for(TCPSender sender : messageNodeConnections.values()) {
+			try {
+				sender.sendData(linkWeights.getBytes());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void setListWeights() {
+		this.graph.listWeights();
 	}
 
 	public void assignWeights() {
@@ -163,7 +196,9 @@ public class Registry implements Node {
 	}
 	
 	
-
+	public int getNodesConnectedSize() {
+		return this.messageNodeConnections.size();
+	}
 
 	public int getPort() {
 		return this.port;
