@@ -74,12 +74,20 @@ public class Registry implements Node {
 			}else if(userInput.equals("assign")) {
 				registry.assignWeights();
 			}else if(userInput.equals("list-weights")) {
-				registry.listWeights();
+				registry.setListWeights();
 			}else if(userInput.equals("send-overlay-link-weights")) {
 				registry.sendLinkWeights();
+			}else if(userInput.equals("list-messaging-nodes")) {
+				registry.listNodes();
 			}
 		}
 		keyboard.close();
+	}
+
+	public void listNodes() {
+		for(String s : messageNodeConnections.keySet()) {
+			System.out.println(s);
+		}
 	}
 
 	public void sendLinkWeights() {
@@ -94,7 +102,7 @@ public class Registry implements Node {
 		}
 	}
 
-	public void listWeights() {
+	public void setListWeights() {
 		this.graph.listWeights();
 	}
 

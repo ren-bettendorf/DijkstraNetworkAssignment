@@ -1,6 +1,7 @@
 package cs455.overlay.dijkstra;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Graph {
 	private ArrayList<Vertex> vertices, possibleVertices;
@@ -26,10 +27,10 @@ public class Graph {
 		while(!possibleVertices.isEmpty()) {
 			count++;
 			System.out.println("[Iteration "+count+"] Size: "+possibleVertices.size());
-			Vertex first = possibleVertices.get((int)Math.floor(Math.random()*possibleVertices.size()));
+			Vertex first = possibleVertices.get(new Random().nextInt(possibleVertices.size()));
 			Vertex second;
 			do {
-				second = possibleVertices.get((int)Math.floor(Math.random()*possibleVertices.size()));
+				second = possibleVertices.get(new Random().nextInt(possibleVertices.size()));
 			}while(first.equals(second));
 			
 			if(first.addConnection(second)) {
@@ -71,7 +72,7 @@ public class Graph {
 
 	public void listWeights() {
 		for(Edge edge : edges) {
-			System.out.println(edge.toString());
+			edge.setWeight(new Random().nextInt(10) + 1);
 		}
 	}
 
@@ -81,7 +82,6 @@ public class Graph {
 		for(Edge edge : edges) {
 			ret += edge.toString() + "\n";
 		}
-		
 		
 		return ret;
 	}
