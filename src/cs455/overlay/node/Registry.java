@@ -74,7 +74,7 @@ public class Registry implements Node {
 			}else if(userInput.equals("assign")) {
 				registry.assignWeights();
 			}else if(userInput.equals("list-weights")) {
-				registry.setListWeights();
+				registry.listNodes();
 			}else if(userInput.equals("send-overlay-link-weights")) {
 				registry.sendLinkWeights();
 			}else if(userInput.equals("list-messaging-nodes")) {
