@@ -102,10 +102,6 @@ public class Registry implements Node {
 		}
 	}
 
-	public void setListWeights() {
-		this.graph.listWeights();
-	}
-
 	public void assignWeights() {
 		this.graph.assignWeights();
 	}

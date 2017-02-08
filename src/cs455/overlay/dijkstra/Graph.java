@@ -70,12 +70,6 @@ public class Graph {
 		return this.edges;
 	}
 
-	public void listWeights() {
-		for(Edge edge : edges) {
-			edge.setWeight(new Random().nextInt(10) + 1);
-		}
-	}
-
 	public String marshallEdgeString() {
 		String ret = "";
 		
