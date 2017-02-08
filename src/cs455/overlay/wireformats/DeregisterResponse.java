@@ -64,6 +64,10 @@ public class DeregisterResponse implements Event, Protocols {
 		return this.response;
 	}
 	
+	public byte getResult() {
+		return this.result;
+	}
+
 	public byte getPort() {
 		return this.result;
 	}

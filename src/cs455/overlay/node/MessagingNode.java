@@ -51,6 +51,12 @@ public class MessagingNode implements Node {
 		System.out.println("Sending deregistration request....");
 		registrySender.sendData(deregisterRequest.getBytes());
 	}
+	
+	public void deregisterResponse(DeregisterResponse response) throws IOException {
+		if(response.getResult() == 1) {
+			registrySocket.close();
+		}
+}
 
 	public int getPort() {
 		return this.port;
@@ -133,7 +139,7 @@ public class MessagingNode implements Node {
 		case Protocols.DEREGISTER_RESPONSE:
 			DeregisterResponse deregister = (DeregisterResponse)event;
 			System.out.println(deregister.getResponse());
-			
+			deregisterResponse(deregister);
 			break;
 		case Protocols.MESSAGING_NODES_LIST:
 			MessagingNodesList nodesList = (MessagingNodesList)event;
