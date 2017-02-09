@@ -47,4 +47,8 @@ public class Vertex {
 	public String toString() {
 		return id;
 	}
+
+	public void clearConnections() {
+		connections.clear();
+	}
 }

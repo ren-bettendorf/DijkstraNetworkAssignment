@@ -175,8 +175,12 @@ public class MessagingNode implements Node {
 	
 	private void setLinkWeights(LinkWeights linkWeights) {
 		int numberLinks = linkWeights.getNumberLinks();
-		String[] edges = linkWeights.getListWeights().split("\n");
+		System.out.println("Number of Edges: " + numberLinks);
 		
+		String[] edges = linkWeights.getListWeights().split("\n");
+		for(int i = 0; i < edges.length; i++) {
+			System.out.println(edges[i].toString());
+		}
 	}
 	
 	public void close() {
