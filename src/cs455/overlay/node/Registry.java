@@ -37,14 +37,8 @@ public class Registry implements Node {
 			e.printStackTrace();
 		}
 		this.port = port;
+		this.graph = new Graph();
 	}
-
-	public void startServerThread(TCPServerThread serverThread) {
-		this.serverThread = serverThread;
-		this.thread = new Thread(this.serverThread);
-		this.thread.start();
-	}
-
 
 	// java cs455.overlay.node.Registry local_port
 	public static void main(String[] args) {
@@ -62,22 +56,23 @@ public class Registry implements Node {
 		Scanner keyboard = new Scanner(System.in);
 		System.out.println("Keyboard scanner ready for commands...");
 		String userInput = "";
-		while(!userInput.equals("close")) {
+		while (!userInput.equals("close")) {
 			userInput = keyboard.nextLine();
-			if(userInput.equals("setup-overlay")) {
-				if(registry.getNodesConnectedSize() >= 10) {
+			if (userInput.equals("setup-overlay")) {
+				if (registry.getNodesConnectedSize() >= 10) {
 					System.out.println("Creating overlay setup...");
 					registry.setupOverlay(4);
-				}else {
-					System.out.println("Can't create overlay due to insufficient nodes: " + registry.getNodesConnectedSize());
+				} else {
+					System.out.println(
+							"Can't create overlay due to insufficient nodes: " + registry.getNodesConnectedSize());
 				}
-			}else if(userInput.equals("assign")) {
+			} else if (userInput.equals("assign")) {
 				registry.assignWeights();
-			}else if(userInput.equals("list-weights")) {
+			} else if (userInput.equals("list-weights")) {
 				registry.listNodes();
-			}else if(userInput.equals("send-overlay-link-weights")) {
+			} else if (userInput.equals("send-overlay-link-weights")) {
 				registry.sendLinkWeights();
-			}else if(userInput.equals("list-messaging-nodes")) {
+			} else if (userInput.equals("list-messaging-nodes")) {
 				registry.listNodes();
 			}
 		}
@@ -85,14 +80,14 @@ public class Registry implements Node {
 	}
 
 	public void listNodes() {
-		for(String s : messageNodeConnections.keySet()) {
+		for (String s : messageNodeConnections.keySet()) {
 			System.out.println(s);
 		}
 	}
 
 	public void sendLinkWeights() {
-		LinkWeights linkWeights = new LinkWeights(this.graph.getEdges().size(),this.graph.marshallEdgeString());
-		for(TCPSender sender : messageNodeConnections.values()) {
+		LinkWeights linkWeights = new LinkWeights(this.graph.getEdges().size(), this.graph.marshallEdgeString());
+		for (TCPSender sender : messageNodeConnections.values()) {
 			try {
 				sender.sendData(linkWeights.getBytes());
 			} catch (IOException e) {
@@ -123,38 +118,43 @@ public class Registry implements Node {
 
 	}
 
-	private void deregisterNode(DeregisterRequest derequest) {		
+	private void deregisterNode(DeregisterRequest derequest) {
 		String node = derequest.getFullHost();
 		Socket nodeSocket = derequest.getSocket();
 		System.out.println("Received a deregistration request from: " + node);
 		String response = "";
 		byte result = 1;
-		if(messageNodeConnections.containsKey(node)) {
-			Socket socket = messageNodeConnections.get(node).getSocket();
-			TCPSender sender = messageNodeConnections.get(node);
-			if(nodeSocket.equals(socket)) {
-				messageNodeConnections.remove(node);
-				response = "Deregistration request successful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
+		if (!this.graph.getOverlayStatus()) {
+			if (messageNodeConnections.containsKey(node)) {
+				Socket socket = messageNodeConnections.get(node).getSocket();
+				TCPSender sender = messageNodeConnections.get(node);
+				if (nodeSocket.equals(socket)) {
+					messageNodeConnections.remove(node);
+					response = "Deregistration request successful. The number of messaging nodes currently constituting the overlay is ("
+							+ messageNodeConnections.size() + ")";
+				} else {
+					result = 0;
+					response = "Deregistration request unsuccessful. Couldn't verify sender IP matched with cached sender IP";
+				}
+
+				try {
+					sender.sendData((new DeregisterResponse(result, response)).getBytes());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			} else {
 				result = 0;
-				response = "Deregistration request unsuccessful. Couldn't verify sender IP matched with cached sender IP";
+				response = "Deregistration request unsuccessful. Node isn't registered already";
 			}
-			
-			try {
-				sender.sendData((new DeregisterResponse(result, response)).getBytes());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}else {
-			result = 0;
-			response = "Deregistration request unsuccessful. Node isn't registered already";
+		} else {
+			response = "Overlay has been setup so no nodes can register or deregister";
 		}
 		System.out.println(response);
-		
+
 	}
 
-	private synchronized void registerNode(RegistrationRequest request) throws UnknownHostException, IOException {
+	private void registerNode(RegistrationRequest request) throws UnknownHostException, IOException {
 		String nodeHostPort = request.getHostname() + ":" + request.getPort();
 		System.out.println("Received a registration request from: " + nodeHostPort);
 		byte regResult = 1;
@@ -162,36 +162,44 @@ public class Registry implements Node {
 
 		Socket socket = request.getSocket();
 		TCPSender sender = new TCPSender(socket);
-		if(!messageNodeConnections.containsKey(nodeHostPort)) {
-			messageNodeConnections.put(nodeHostPort, sender);
-			response = "Registration request successful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
-			
-		}else {
+		if (!this.graph.getOverlayStatus()) {
+			if (!messageNodeConnections.containsKey(nodeHostPort)) {
+				messageNodeConnections.put(nodeHostPort, sender);
+				response = "Registration request successful. The number of messaging nodes currently constituting the overlay is ("
+						+ messageNodeConnections.size() + ")";
+
+			} else {
+				regResult = 0;
+				response = "Registration request unsuccessful. Node already in overlay";
+			}
+		} else {
 			regResult = 0;
-			response = "Registration request unsuccessful. The number of messaging nodes currently constituting the overlay is (" + messageNodeConnections.size() + ")";
+			response = "Registration request unsuccessful. Overlay already setup";
 		}
-		
+
 		System.out.println(response);
 		RegistrationResponse registrationResponse = new RegistrationResponse(regResult, response);
 		System.out.println("Creating registration response...");
 
-
 		System.out.println("Sending registration report...");
 		sender.sendData(registrationResponse.getBytes());
 	}
-	
+
 	private void setupOverlay(int connectionsRequired) {
 		// Add a vertex for each node in node map
 		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
-		for(String node : messageNodeConnections.keySet()) {
+		for (String node : messageNodeConnections.keySet()) {
 			vertices.add(new Vertex(node, connectionsRequired));
 		}
-		
-		this.graph = new Graph(vertices);
-		graph.setupOverlay(connectionsRequired);
+		graph.setupOverlay(vertices, connectionsRequired);
 	}
 	
-	
+	public void startServerThread(TCPServerThread serverThread) {
+		this.serverThread = serverThread;
+		this.thread = new Thread(this.serverThread);
+		this.thread.start();
+	}
+
 	public int getNodesConnectedSize() {
 		return this.messageNodeConnections.size();
 	}
@@ -199,7 +207,7 @@ public class Registry implements Node {
 	public int getPort() {
 		return this.port;
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.host;

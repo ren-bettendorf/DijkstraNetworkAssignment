@@ -6,10 +6,31 @@ import java.util.Random;
 public class Graph {
 	private ArrayList<Vertex> vertices, possibleVertices;
 	private ArrayList<Edge> edges;
+	private boolean overlayStatus;
 
-	public Graph(ArrayList<Vertex> vertices) {
-		this.vertices = vertices;
+	public Graph() {
 		this.edges = new ArrayList<Edge>();
+		setOverlayStatus(false);
+	}
+	
+	public Graph(ArrayList<Edge> edges) {
+		this.edges = edges;
+		setOverlayStatus(true);
+		createVertices();
+	}
+
+	private void createVertices() {
+		for(Edge edge : edges) {
+			if(!vertices.contains(edge.getSource())) {
+				vertices.add(new Vertex(edge.getSource().getID(), 4));
+				
+			}
+			if(!vertices.contains(edge.getDestination())) {
+				vertices.add(new Vertex(edge.getDestination().getID(), 4));
+			}
+			vertices.get(vertices.indexOf(edge.getSource())).addConnection(edge.getDestination());
+			vertices.get(vertices.indexOf(edge.getDestination())).addConnection(edge.getSource());
+		}
 	}
 
 	public void assignWeights() {
@@ -19,7 +40,8 @@ public class Graph {
 		}
 	}
 
-	public void setupOverlay(int connectionsRequired) {
+	public void setupOverlay(ArrayList<Vertex> vertices, int connectionsRequired) {
+		this.vertices = vertices;
 		possibleVertices = new ArrayList<Vertex>();
 		possibleVertices.addAll(vertices);
 		setupFirstRoundConnections();
@@ -62,6 +84,7 @@ public class Graph {
 				possibleVertices.addAll(vertices);
 			}
 		}
+		setOverlayStatus(true);
 	}
 
 	private void setupFirstRoundConnections() {
@@ -74,6 +97,10 @@ public class Graph {
 		edges.add(new Edge(possibleVertices.get(0), possibleVertices.get(possibleVertices.size() - 1)));
 	}
 
+	private void setOverlayStatus(boolean status) {
+		this.overlayStatus = status;
+	}
+	
 	public ArrayList<Vertex> getVertices() {
 		return this.vertices;
 	}
@@ -90,6 +117,19 @@ public class Graph {
 		}
 
 		return ret;
+	}
+
+	public boolean getOverlayStatus() {
+		return overlayStatus;
+	}
+
+	public int getEdgeWeight(Vertex source, Vertex step) {
+		for(Edge edge : edges) {
+			if(edge.getSource().equals(source) && edge.getDestination().equals(step)) {
+				return edge.getWeight();
+			}
+		}
+		return -1;
 	}
 
 }

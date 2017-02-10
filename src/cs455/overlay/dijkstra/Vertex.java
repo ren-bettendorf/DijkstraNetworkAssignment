@@ -51,4 +51,6 @@ public class Vertex {
 	public void clearConnections() {
 		connections.clear();
 	}
+
+	
 }
