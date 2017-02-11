@@ -89,7 +89,6 @@ public class MessagingNode implements Node {
 		try {
 			shortestPath = this.path.getFullPathWeights(new Vertex(InetAddress.getLocalHost().getHostAddress()+":"+getPort(), 4));
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -98,7 +97,6 @@ public class MessagingNode implements Node {
 
 	@Override
 	public synchronized void onEvent(Event event) throws IOException {
-		// TODO Auto-generated method stub
 		int eventType = event.getType();
 		switch (eventType) {
 		case Protocols.REGISTER_RESPONSE:
@@ -135,7 +133,6 @@ public class MessagingNode implements Node {
 				TCPSender sender = new TCPSender(socket);
 				messageNodeConnections.put(list[index], sender);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 

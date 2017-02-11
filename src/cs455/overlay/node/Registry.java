@@ -192,6 +192,7 @@ public class Registry implements Node {
 			vertices.add(new Vertex(node, connectionsRequired));
 		}
 		graph.setupOverlay(vertices, connectionsRequired);
+		System.out.println("Overlay setup");
 	}
 	
 	public void startServerThread(TCPServerThread serverThread) {
