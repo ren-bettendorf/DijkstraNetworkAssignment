@@ -42,6 +42,14 @@ public class Vertex {
 		}
 		return false;
 	}
+	
+	@Override
+    public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((id == null) ? 0 : id.hashCode());
+            return result;
+    }
 
 	@Override
 	public String toString() {
@@ -50,6 +58,10 @@ public class Vertex {
 
 	public void clearConnections() {
 		connections.clear();
+	}
+
+	public boolean contains(Vertex vertex) {
+		return this.connections.contains(vertex);
 	}
 
 	

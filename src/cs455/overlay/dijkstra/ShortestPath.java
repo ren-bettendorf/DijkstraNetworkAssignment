@@ -6,10 +6,8 @@ import java.util.HashMap;
 
 public class ShortestPath {
 	private Graph graph;
-	private ArrayList<Vertex> vertices;
+	private ArrayList<Vertex> vertices, settledNodes, unSettledNodes;
 	private ArrayList<Edge> edges;
-	private ArrayList<Vertex> settledNodes;
-    private ArrayList<Vertex> unSettledNodes;
     private HashMap<Vertex, Vertex> predecessors;
     private HashMap<Vertex, Integer> distance;
 
@@ -101,6 +99,7 @@ public class ShortestPath {
 		Vertex step = target;
 		// check if a path exists
 		if (predecessors.get(step) == null) {
+			System.out.println("No predecessors");
 			return null;
 		}
 		path.add(step);
@@ -114,16 +113,23 @@ public class ShortestPath {
 	}
 	
 	public String getFullPathWeights(Vertex source) {
+		System.out.println("Executing for " + source.toString());
+		execute(source);
 		String ret = "";
-		for(Vertex vertex : vertices) {
+		ArrayList<Vertex> otherNodes = new ArrayList<Vertex>(vertices);
+		otherNodes.remove(source);
+		for(Vertex vertex : otherNodes) {
+			System.out.println("Finding path for " + vertex.toString());
 			if(!source.equals(vertex)) {
 				ArrayList<Vertex> path = getPath(vertex);
+				path.remove(path.indexOf(source));
 				int pathWeight = 0;
-				while(!path.isEmpty()) {
-					Vertex step = path.remove(0);
+				for(Vertex step : path) {
 					pathWeight += graph.getEdgeWeight(source, step);
+					System.out.println("Added " + step.toString() + " Weight " + pathWeight);
 				}
 				ret += vertex.getID() + "--" + pathWeight;
+				System.out.println("Total Path Weight " + pathWeight);
 			}
 		}
 		

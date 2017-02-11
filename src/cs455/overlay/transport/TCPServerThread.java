@@ -30,7 +30,6 @@ public class TCPServerThread implements Runnable {
 			try {
 				Socket socket = serverSocket.accept();
 				
-				System.out.println("[TCPServerThread] Connection is seen and accepted");
 				TCPReceiverThread tcpReceiverThread = new TCPReceiverThread(node, socket);
 				new Thread(tcpReceiverThread).start();
 			} catch (IOException ioe) {

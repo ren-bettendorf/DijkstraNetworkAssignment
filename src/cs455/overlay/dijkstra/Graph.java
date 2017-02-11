@@ -42,6 +42,7 @@ public class Graph {
 	}
 
 	public void setupOverlay(ArrayList<Vertex> vertices, int connectionsRequired) {
+		edges.clear();
 		this.vertices = vertices;
 		possibleVertices = new ArrayList<Vertex>();
 		possibleVertices.addAll(vertices);
@@ -51,6 +52,7 @@ public class Graph {
 
 		int count = 0;
 		while (!possibleVertices.isEmpty()) {
+			
 			count++;
 			System.out.println("[Iteration " + count + "] Size: " + possibleVertices.size());
 			Vertex first, second;
@@ -60,32 +62,27 @@ public class Graph {
 			do {
 				second = possibleVertices.get(new Random().nextInt(possibleVertices.size()));
 			} while (first.equals(second));
-
+			
 			if (first.addConnection(second)) {
 				second.addConnection(first);
-				System.out.println("Connected " + first.toString() + " " + first.getNumberConnection() + " and "
-						+ second.toString() + " " + second.getNumberConnection());
 				edges.add(new Edge(first, second));
 			}
 
 			if (first.getNumberConnection() == connectionsRequired) {
-				System.out.println(
-						"Removing " + first.toString() + " due to max connections: " + first.getNumberConnection());
 				possibleVertices.remove(first);
 			}
 			if (second.getNumberConnection() == connectionsRequired) {
-				System.out.println(
-						"Removing " + second.toString() + " due to max connections: " + second.getNumberConnection());
 				possibleVertices.remove(second);
 			}
-			System.out.println("");
-			if (possibleVertices.size() == 1) {
+
+			if (possibleVertices.size() == 1 || (possibleVertices.size() == 2  && possibleVertices.get(0).contains(possibleVertices.get(1)))) {
 				count = 0;
 				possibleVertices.clear();
 				for (int i = 0; i < vertices.size(); i++) {
 					vertices.get(i).clearConnections();
 				}
 				possibleVertices.addAll(vertices);
+				edges.clear();
 			}
 			if (count > 100)
 				break;
@@ -97,11 +94,16 @@ public class Graph {
 	private void setupFirstRoundConnections() {
 		for (int index = 0; index < possibleVertices.size() - 1; index++) {
 			edges.add(new Edge(possibleVertices.get(index), possibleVertices.get(index + 1)));
-			possibleVertices.get(index).addConnection(possibleVertices.get(index + 1));
-			possibleVertices.get(index + 1).addConnection(possibleVertices.get(index));
+			addConnections(possibleVertices.get(index), possibleVertices.get(index + 1));
 
 		}
 		edges.add(new Edge(possibleVertices.get(0), possibleVertices.get(possibleVertices.size() - 1)));
+		addConnections(possibleVertices.get(0), possibleVertices.get(possibleVertices.size() - 1));
+	}
+	
+	private void addConnections(Vertex first, Vertex second) {
+		first.addConnection(second);
+		second.addConnection(first);
 	}
 
 	private void setOverlayStatus(boolean status) {
@@ -132,7 +134,7 @@ public class Graph {
 
 	public int getEdgeWeight(Vertex source, Vertex step) {
 		for (Edge edge : edges) {
-			if (edge.getSource().equals(source) && edge.getDestination().equals(step)) {
+			if ( ( edge.getSource().equals(source) && edge.getDestination().equals(step) ) || ( edge.getSource().equals(step) && edge.getDestination().equals(source) ) ) {
 				return edge.getWeight();
 			}
 		}
