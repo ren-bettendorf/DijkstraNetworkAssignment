@@ -35,9 +35,11 @@ public class Graph {
 	}
 
 	public void assignWeights() {
-		for (Edge e : edges) {
-			e.setWeight((int) Math.floor(Math.random() * 10) + 1);
-			System.out.println("Assigned " + e.toString());
+		for (int index = 0; index < edges.size(); index += 2) {
+			int weight = new Random().nextInt(10) + 1;
+			edges.get(index).setWeight(weight);
+			edges.get(index + 1).setWeight(weight);
+			System.out.println("Edges " + edges.get(index).toString() + " assigned " + weight);
 		}
 	}
 
@@ -66,6 +68,7 @@ public class Graph {
 			if (first.addConnection(second)) {
 				second.addConnection(first);
 				edges.add(new Edge(first, second));
+				edges.add(new Edge(second, first));
 			}
 
 			if (first.getNumberConnection() == connectionsRequired) {
@@ -93,17 +96,16 @@ public class Graph {
 
 	private void setupFirstRoundConnections() {
 		for (int index = 0; index < possibleVertices.size() - 1; index++) {
-			edges.add(new Edge(possibleVertices.get(index), possibleVertices.get(index + 1)));
 			addConnections(possibleVertices.get(index), possibleVertices.get(index + 1));
-
 		}
-		edges.add(new Edge(possibleVertices.get(0), possibleVertices.get(possibleVertices.size() - 1)));
 		addConnections(possibleVertices.get(0), possibleVertices.get(possibleVertices.size() - 1));
 	}
 	
 	private void addConnections(Vertex first, Vertex second) {
 		first.addConnection(second);
 		second.addConnection(first);
+		edges.add(new Edge(first, second));
+		edges.add(new Edge(second, first));
 	}
 
 	private void setOverlayStatus(boolean status) {

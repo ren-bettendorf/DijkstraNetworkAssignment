@@ -8,13 +8,16 @@ public class ShortestPath {
 	private Graph graph;
 	private ArrayList<Vertex> vertices, settledNodes, unSettledNodes;
 	private ArrayList<Edge> edges;
-    private HashMap<Vertex, Vertex> predecessors;
-    private HashMap<Vertex, Integer> distance;
+	private HashMap<Vertex, Vertex> predecessors;
+	private HashMap<Vertex, Integer> distance;
+	private Vertex startVertex;
 
-	public ShortestPath(Graph graph) {
+	public ShortestPath(Graph graph, Vertex source) {
 		this.graph = graph;
 		this.edges = graph.getEdges();
 		this.vertices = graph.getVertices();
+		this.startVertex = source;
+		execute(source);
 	}
 
 	public void execute(Vertex source) {
@@ -111,28 +114,22 @@ public class ShortestPath {
 		Collections.reverse(path);
 		return path;
 	}
-	
-	public String getFullPathWeights(Vertex source) {
-		System.out.println("Executing for " + source.toString());
-		execute(source);
+
+	public String getFullPathWeights() {
 		String ret = "";
 		ArrayList<Vertex> otherNodes = new ArrayList<Vertex>(vertices);
-		otherNodes.remove(source);
-		for(Vertex vertex : otherNodes) {
-			System.out.println("Finding path for " + vertex.toString());
-			if(!source.equals(vertex)) {
-				ArrayList<Vertex> path = getPath(vertex);
-				path.remove(path.indexOf(source));
-				int pathWeight = 0;
-				for(Vertex step : path) {
-					pathWeight += graph.getEdgeWeight(source, step);
-					System.out.println("Added " + step.toString() + " Weight " + pathWeight);
-				}
-				ret += vertex.getID() + "--" + pathWeight;
-				System.out.println("Total Path Weight " + pathWeight);
+		otherNodes.remove(startVertex);
+		for (Vertex vertex : otherNodes) {
+			ArrayList<Vertex> path = getPath(vertex);
+			Vertex source = path.remove(0);
+			int pathWeight = 0;
+			for (Vertex step : path) {
+				pathWeight += graph.getEdgeWeight(source, step);
+				source = step;
 			}
+			ret += vertex.getID() + "--" + pathWeight + "--";
 		}
-		
-		return ret;
+
+		return ret.substring(0, ret.length()-2);
 	}
 }

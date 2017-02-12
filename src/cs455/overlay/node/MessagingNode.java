@@ -85,9 +85,7 @@ public class MessagingNode implements Node {
 	}
 
 	private void printShortestPath() {
-		String shortestPath = "empty";
-		
-		System.out.println(shortestPath);
+		System.out.println(this.path.getFullPathWeights());
 	}
 
 	@Override
@@ -113,8 +111,7 @@ public class MessagingNode implements Node {
 			System.out.println("Received LinkWeights");
 			ArrayList<Edge> edges = setLinkWeights(linkWeights);
 			Graph graph = new Graph(edges);
-			this.path = new ShortestPath(graph);
-			this.path.getFullPathWeights(new Vertex(InetAddress.getLocalHost().getHostAddress()+":"+getPort(), 4));
+			this.path = new ShortestPath(graph, new Vertex(InetAddress.getLocalHost().getHostAddress()+":"+getPort(), 4));
 			break;
 		}
 	}
