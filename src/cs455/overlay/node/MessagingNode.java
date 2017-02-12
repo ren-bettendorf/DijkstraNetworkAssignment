@@ -3,7 +3,6 @@ package cs455.overlay.node;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -69,12 +68,6 @@ public class MessagingNode implements Node {
 					mNode.deregister(registryHost, registryPort);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else if (userInput.equals("register")) {
-				try {
-					mNode.register(registryHost, registryPort);
-				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			} else if (userInput.equals("print-shortest-path")) {
@@ -143,8 +136,6 @@ public class MessagingNode implements Node {
 			Edge edge = new Edge(new Vertex(edgeSplit[0], 4), new Vertex(edgeSplit[1], 4));
 			edge.setWeight(Integer.parseInt(edgeSplit[2]));
 			returnEdges.add(edge);
-			
-			System.out.println("Added to Edge List: " + edge.toString());
 		}
 		return returnEdges;
 	}

@@ -6,130 +6,107 @@ import java.util.HashMap;
 
 public class ShortestPath {
 	private Graph graph;
-	private ArrayList<Vertex> vertices, settledNodes, unSettledNodes;
+	private ArrayList<Vertex> vertices, otherVertices, settledVertices, unsettledVertices;
 	private ArrayList<Edge> edges;
 	private HashMap<Vertex, Vertex> predecessors;
-	private HashMap<Vertex, Integer> distance;
+	private HashMap<Vertex, Integer> pathWeights;
 	private Vertex startVertex;
+	private HashMap<Vertex, ArrayList<Vertex>> relayCache;
 
 	public ShortestPath(Graph graph, Vertex source) {
 		this.graph = graph;
 		this.edges = graph.getEdges();
 		this.vertices = graph.getVertices();
 		this.startVertex = source;
-		execute(source);
+		this.otherVertices = new ArrayList<Vertex>(vertices);
+		this.otherVertices.remove(startVertex);
+		this.settledVertices = new ArrayList<Vertex>();
+		this.unsettledVertices = new ArrayList<Vertex>();
+		this.pathWeights = new HashMap<Vertex, Integer>();
+		this.predecessors = new HashMap<Vertex, Vertex>();
+
+		execute();
+		cacheRoutes();
 	}
 
-	public void execute(Vertex source) {
-		settledNodes = new ArrayList<Vertex>();
-		unSettledNodes = new ArrayList<Vertex>();
-		distance = new HashMap<Vertex, Integer>();
-		predecessors = new HashMap<Vertex, Vertex>();
-		distance.put(source, 0);
-		unSettledNodes.add(source);
-		while (unSettledNodes.size() > 0) {
-			Vertex node = getMinimum(unSettledNodes);
-			settledNodes.add(node);
-			unSettledNodes.remove(node);
-			findMinimalDistances(node);
+	public void execute() {
+		setInitialDistances();
+		unsettledVertices.add(startVertex);
+
+		while (unsettledVertices.size() > 0) {
+			Vertex vertex = getClosestVertex();
+			settledVertices.add(vertex);
+			unsettledVertices.remove(vertex);
+			findMinimalDistances(vertex);
 		}
 	}
 
-	private void findMinimalDistances(Vertex node) {
-		ArrayList<Vertex> adjacentNodes = getNeighbors(node);
+	private void setInitialDistances() {
+		for(Vertex vertex : otherVertices) {
+			pathWeights.put(vertex, Integer.MAX_VALUE);
+		}
+		pathWeights.put(startVertex, 0);
+	}
+
+	private void findMinimalDistances(Vertex sourceVertex) {
+		ArrayList<Vertex> adjacentNodes = getAdjacentVertices(sourceVertex);
 		for (Vertex target : adjacentNodes) {
-			if (getShortestDistance(target) > getShortestDistance(node) + getDistance(node, target)) {
-				distance.put(target, getShortestDistance(node) + getDistance(node, target));
-				predecessors.put(target, node);
-				unSettledNodes.add(target);
+			int distance = graph.getEdgeWeight(sourceVertex, target);
+			if (pathWeights.get(sourceVertex) + distance < pathWeights.get(target)) {
+				pathWeights.put(target, pathWeights.get(sourceVertex) + distance);
+				predecessors.put(target, sourceVertex);
+				unsettledVertices.add(target);
 			}
 		}
-
 	}
 
-	private int getDistance(Vertex node, Vertex target) {
+	private ArrayList<Vertex> getAdjacentVertices(Vertex sourceVertex) {
+		ArrayList<Vertex> adjacentVertices = new ArrayList<Vertex>();
 		for (Edge edge : edges) {
-			if (edge.getSource().equals(node) && edge.getDestination().equals(target)) {
-				return edge.getWeight();
+			if (edge.getSource().equals(sourceVertex) && !settledVertices.contains(edge.getDestination())) {
+				adjacentVertices.add(edge.getDestination());
 			}
 		}
-		throw new RuntimeException("Should not happen");
+		return adjacentVertices;
 	}
 
-	private ArrayList<Vertex> getNeighbors(Vertex node) {
-		ArrayList<Vertex> neighbors = new ArrayList<Vertex>();
-		for (Edge edge : edges) {
-			if (edge.getSource().equals(node) && !isSettled(edge.getDestination())) {
-				neighbors.add(edge.getDestination());
-			}
-		}
-		return neighbors;
-	}
-
-	private Vertex getMinimum(ArrayList<Vertex> vertexes) {
-		Vertex minimum = null;
-		for (Vertex vertex : vertexes) {
-			if (minimum == null) {
+	private Vertex getClosestVertex() {
+		Vertex minimum = unsettledVertices.remove(0);
+		for (Vertex vertex : unsettledVertices) {
+			if (pathWeights.get(vertex) < pathWeights.get(minimum)) {
 				minimum = vertex;
-			} else {
-				if (getShortestDistance(vertex) < getShortestDistance(minimum)) {
-					minimum = vertex;
-				}
 			}
 		}
 		return minimum;
 	}
 
-	private boolean isSettled(Vertex vertex) {
-		return settledNodes.contains(vertex);
-	}
-
-	private int getShortestDistance(Vertex destination) {
-		Integer d = distance.get(destination);
-		if (d == null) {
-			return Integer.MAX_VALUE;
-		} else {
-			return d;
-		}
-	}
-
-	/*
-	 * This method returns the path from the source to the selected target and
-	 * NULL if no path exists
-	 */
 	public ArrayList<Vertex> getPath(Vertex target) {
 		ArrayList<Vertex> path = new ArrayList<Vertex>();
 		Vertex step = target;
-		// check if a path exists
-		if (predecessors.get(step) == null) {
-			System.out.println("No predecessors");
-			return null;
-		}
 		path.add(step);
 		while (predecessors.get(step) != null) {
 			step = predecessors.get(step);
 			path.add(step);
 		}
-		// Put it into the correct order
 		Collections.reverse(path);
 		return path;
 	}
 
+	public void cacheRoutes() {
+		relayCache = new HashMap<Vertex, ArrayList<Vertex>>();
+		for (Vertex target : otherVertices) {
+			relayCache.put(target, getPath(target));
+		}
+	}
+
 	public String getFullPathWeights() {
-		String ret = "";
-		ArrayList<Vertex> otherNodes = new ArrayList<Vertex>(vertices);
-		otherNodes.remove(startVertex);
-		for (Vertex vertex : otherNodes) {
-			ArrayList<Vertex> path = getPath(vertex);
-			Vertex source = path.remove(0);
-			int pathWeight = 0;
-			for (Vertex step : path) {
-				pathWeight += graph.getEdgeWeight(source, step);
-				source = step;
-			}
-			ret += vertex.getID() + "--" + pathWeight + "--";
+		String printedPath = "";
+
+		for (Vertex target : otherVertices) {
+			int weight = pathWeights.get(target);
+			printedPath += target.getID() + "--" + weight + "--";
 		}
 
-		return ret.substring(0, ret.length()-2);
+		return printedPath.substring(0, printedPath.length() - 2);
 	}
 }

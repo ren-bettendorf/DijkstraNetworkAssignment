@@ -39,7 +39,6 @@ public class Graph {
 			int weight = new Random().nextInt(10) + 1;
 			edges.get(index).setWeight(weight);
 			edges.get(index + 1).setWeight(weight);
-			System.out.println("Edges " + edges.get(index).toString() + " assigned " + weight);
 		}
 	}
 
@@ -56,7 +55,6 @@ public class Graph {
 		while (!possibleVertices.isEmpty()) {
 			
 			count++;
-			System.out.println("[Iteration " + count + "] Size: " + possibleVertices.size());
 			Vertex first, second;
 
 			first = possibleVertices.get(new Random().nextInt(possibleVertices.size()));
@@ -90,7 +88,6 @@ public class Graph {
 			if (count > 100)
 				break;
 		}
-		System.out.println("Number Edges: " + edges.size());
 		setOverlayStatus(true);
 	}
 
