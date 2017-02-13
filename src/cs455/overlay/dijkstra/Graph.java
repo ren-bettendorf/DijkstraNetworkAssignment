@@ -1,6 +1,7 @@
 package cs455.overlay.dijkstra;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 public class Graph {
@@ -138,6 +139,20 @@ public class Graph {
 			}
 		}
 		return -1;
+	}
+
+	public HashMap<Vertex, ArrayList<Vertex>> getConnectionsHashMap() {
+		HashMap<Vertex, ArrayList<Vertex>> connections = new HashMap<Vertex, ArrayList<Vertex>>();
+		
+		for(Vertex vertex : vertices) {
+			connections.put(vertex, new ArrayList<Vertex>());
+		}
+		
+		for(int i = 0; i < edges.size(); i += 2) {
+			connections.get(edges.get(i).getSource()).add(edges.get(i).getDestination());
+		}
+		
+		return connections;
 	}
 
 }

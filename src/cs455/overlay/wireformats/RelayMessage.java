@@ -8,22 +8,30 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class TaskInitiate implements Event, Protocols{
+public class RelayMessage implements Event, Protocols {
 	private int type;
-	private int numberRounds;
+	private String connectList;
+	private int data;
 	
-	public TaskInitiate(int numberRounds) {
-		this.type = Protocols.TASK_INITIATE;
-		this.numberRounds = numberRounds;
+	public RelayMessage(int data, String connectList) {
+		this.type = Protocols.RELAY_MESSAGE;
+		this.connectList = connectList;
+		this.data = data;
 	}
 	
-	public TaskInitiate(byte[] marshalledBytes) throws IOException {
+	public RelayMessage(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 		
 		type = din.readInt();
-
-		numberRounds = din.readInt();
+		
+		int connectLinksLength = din.readInt();
+		byte[] connectLinksBytes = new byte[connectLinksLength];
+		din.readFully(connectLinksBytes);
+		
+		connectList = new String(connectLinksBytes);
+		
+		data = din.readInt();
 		
 		baInputStream.close();
 		din.close();
@@ -37,8 +45,13 @@ public class TaskInitiate implements Event, Protocols{
 		DataOutputStream dout = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 		
 		dout.writeInt(type);
+		
+		byte[] connectLinksBytes = connectList.getBytes();
+		int connectLinksLength = connectLinksBytes.length;
+		dout.writeInt(connectLinksLength);
+		dout.write(connectLinksBytes);
 
-		dout.writeInt(numberRounds);
+		dout.writeInt(data);
 		
 		dout.flush();
 		marshalledBytes = baOutputStream.toByteArray();
@@ -49,12 +62,16 @@ public class TaskInitiate implements Event, Protocols{
 		return marshalledBytes;
 	}
 	
+	public int getData() {
+		return this.data;
+	}
+	
+	public String getConnections() {
+		return this.connectList;
+	}
+
 	@Override
 	public int getType() {
 		return this.type;
-	}
-
-	public int getRoundNumber() {
-		return this.numberRounds;
 	}
 }

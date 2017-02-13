@@ -109,4 +109,16 @@ public class ShortestPath {
 
 		return printedPath.substring(0, printedPath.length() - 2);
 	}
+	
+	public String getCachedRoute(Vertex target) {
+		ArrayList<Vertex> route = new ArrayList<Vertex>(relayCache.get(target));
+		String path = "";
+		route.remove(0);
+		for(Vertex vertex : route) {
+			path += vertex.getID() + "\n";
+		}
+		path = path.substring(0, path.lastIndexOf("\n"));
+		
+		return path;
+	}
 }

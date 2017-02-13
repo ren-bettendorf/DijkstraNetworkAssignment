@@ -7,28 +7,31 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 
-public class WireFormatWidget implements Event {
+public class RelayConnection implements Event {
 	private int type;
-	private long timestamp;
-	private String identifier;
-	private int tracker;
+	private String connection;
+	private Socket socket;
 	
-	public WireFormatWidget(byte[] marshalledBytes) throws IOException {
+	public RelayConnection(String connection) {
+		this.type = Protocols.RELAY_CONNECTION;
+		this.connection = connection;
+	}
+	
+	public RelayConnection(byte[] marshalledBytes, Socket socket) throws IOException {
+		this.socket = socket;
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
 		
 		type = din.readInt();
-		timestamp = din.readLong();
 		
-		int identifierLength = din.readInt();
-		byte[] identifierBytes = new byte[identifierLength];
-		din.readFully(identifierBytes);
+		int connectionLength = din.readInt();
+		byte[] connectionBytes = new byte[connectionLength];
+		din.readFully(connectionBytes);
 		
-		identifier = new String(identifierBytes);
-		
-		tracker = din.readInt();
+		connection= new String(connectionBytes);
 		
 		baInputStream.close();
 		din.close();
@@ -41,14 +44,11 @@ public class WireFormatWidget implements Event {
 		DataOutputStream dout = new DataOutputStream(new BufferedOutputStream(baOutputStream));
 		
 		dout.writeInt(type);
-		dout.writeLong(timestamp);
 		
-		byte[] identifierBytes = identifier.getBytes();
-		int elementLength = identifierBytes.length;
-		dout.writeInt(elementLength);
-		dout.write(identifierBytes);
-		
-		dout.writeInt(tracker);
+		byte[] connectionBytes = connection.getBytes();
+		int connectionLength = connectionBytes.length;
+		dout.writeInt(connectionLength);
+		dout.write(connectionBytes);
 		
 		dout.flush();
 		marshalledBytes = baOutputStream.toByteArray();
@@ -61,7 +61,14 @@ public class WireFormatWidget implements Event {
 
 	@Override
 	public int getType() {
-		// TODO Auto-generated method stub
-		return 0;
+		return this.type;
+	}
+
+	public Socket getSocket() {
+		return this.socket;
+	}
+
+	public String getConnection() {
+		return this.connection;
 	}
 }

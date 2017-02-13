@@ -11,5 +11,6 @@ public interface Protocols {
 	final int TASK_COMPLETE = 7;
 	final int PULL_TRAFFIC_SUMMARY = 8;
 	final int TRAFFIC_SUMMARY = 9;
-	final int ERROR_STATUS = 86;
+	final int RELAY_CONNECTION = 10;
+	final int RELAY_MESSAGE = 11;
 }

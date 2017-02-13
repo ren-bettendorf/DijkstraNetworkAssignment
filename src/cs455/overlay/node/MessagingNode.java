@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.Scanner;
 
 import cs455.overlay.dijkstra.Edge;
@@ -18,6 +19,7 @@ import cs455.overlay.wireformats.*;
 
 public class MessagingNode implements Node {
 	private int port;
+	private String ID, host;
 	private Socket registrySocket;
 	private TCPSender registrySender;
 	private TCPReceiverThread receiverThread;
@@ -25,9 +27,14 @@ public class MessagingNode implements Node {
 	private Thread thread;
 	private HashMap<String, TCPSender> messageNodeConnections;
 	private ShortestPath path;
+	private long sum;
+	private int messageReceived, messageSent;
 
 	public MessagingNode() throws IOException {
 		messageNodeConnections = new HashMap<String, TCPSender>();
+		sum = 0;
+		messageReceived = 0;
+		messageSent = 0;
 	}
 
 	// java cs455.overlay.node.MessagingNode registry_host registry_port
@@ -60,14 +67,10 @@ public class MessagingNode implements Node {
 		String userInput = "";
 		while (!userInput.equals("exit-overlay")) {
 			userInput = keyboard.nextLine();
-
-			if (userInput.equals("exit-overlay")) {
-
-			} else if (userInput.equals("deregister")) {
+			if (userInput.equals("deregister")) {
 				try {
 					mNode.deregister(registryHost, registryPort);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			} else if (userInput.equals("print-shortest-path")) {
@@ -104,9 +107,78 @@ public class MessagingNode implements Node {
 			System.out.println("Received LinkWeights");
 			ArrayList<Edge> edges = setLinkWeights(linkWeights);
 			Graph graph = new Graph(edges);
-			this.path = new ShortestPath(graph, new Vertex(InetAddress.getLocalHost().getHostAddress()+":"+getPort(), 4));
+			this.path = new ShortestPath(graph, new Vertex(this.ID, 4));
+			break;
+		case Protocols.RELAY_CONNECTION:
+			RelayConnection relayConnection = (RelayConnection) event;
+			System.out.println("Received RelayConnection");
+			messageNodeConnections.put(relayConnection.getConnection(), new TCPSender(relayConnection.getSocket()));
+			break;
+		case Protocols.TASK_INITIATE:
+			TaskInitiate task = (TaskInitiate) event;
+			startRounds(task.getRoundNumber());
+			System.out.println("MessageReceived " + messageReceived + " MessageSent " + messageSent + " Sum " + sum);
+			break;
+		case Protocols.RELAY_MESSAGE:
+			RelayMessage message = (RelayMessage) event;
+			consumeMessage(message);
 			break;
 		}
+	}
+
+	private void consumeMessage(RelayMessage message) {
+		String[] relayPaths = message.getConnections().split("\n");
+		messageReceived++;
+		System.out.println("Relay Path Length " + relayPaths.length + " Message " + message.getConnections());
+		if( relayPaths[0].equals(this.ID) ) {
+			String connections = "";
+			for(int i = 1; i < relayPaths.length; i++) {
+				connections += relayPaths[i] + "\n";
+			}
+			RelayMessage relay = new RelayMessage(message.getData(), connections);
+			messageSent++;
+			try {
+				messageNodeConnections.get(relayPaths[1]).sendData(relay.getBytes());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			sum += message.getData();
+		}
+	}
+
+	private void startRounds(int roundNumber) {
+		for(int round = 0; round < roundNumber; round++) {
+			ArrayList<String> nodesToMessage = new ArrayList<String>();
+			for(int nodes = 0; nodes < 5; nodes++) {
+				String node = null;
+				while(!nodesToMessage.contains(node)) {
+					node = pickRandomNode();
+					if(!nodesToMessage.contains(node)){
+						nodesToMessage.add(node);
+					}
+				}
+				Random random = new Random();
+				int data = random.nextInt(2147483647);
+				if(random.nextDouble() < 0.5) {
+					data *= -1;
+				}
+				RelayMessage message = new RelayMessage(data, path.getCachedRoute(new Vertex(node, 4)));
+				System.out.println("Sending " + node + " data " + data);
+				System.out.println("Route " + path.getCachedRoute(new Vertex(node, 4)));
+				messageSent++;
+				try {
+					messageNodeConnections.get(node).sendData(message.getBytes());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	private String pickRandomNode() {
+		String[] nodes = messageNodeConnections.keySet().toArray(new String[0]);
+		return (String) nodes[new Random().nextInt(nodes.length)];
 	}
 
 	private void setMessagingNodesList(MessagingNodesList nodeList) {
@@ -117,6 +189,8 @@ public class MessagingNode implements Node {
 				Socket socket = new Socket(splitInfo[0], Integer.parseInt(splitInfo[1]));
 
 				TCPSender sender = new TCPSender(socket);
+				RelayConnection connection = new RelayConnection(this.ID);
+				sender.sendData(connection.getBytes());
 				messageNodeConnections.put(list[index], sender);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -128,7 +202,6 @@ public class MessagingNode implements Node {
 
 	private ArrayList<Edge> setLinkWeights(LinkWeights linkWeights) {
 		int numberLinks = linkWeights.getNumberLinks();
-		System.out.println("Number of Edges: " + numberLinks);
 		ArrayList<Edge> returnEdges = new ArrayList<Edge>();
 		String[] edges = linkWeights.getListWeights().split("\n");
 		for (int i = 0; i < edges.length; i++) {
@@ -149,7 +222,9 @@ public class MessagingNode implements Node {
 
 	public void register(String registryHost, int registryPort) throws IOException {
 		System.out.println("Creating registration request...");
-		RegistrationRequest registrationRequest = new RegistrationRequest(InetAddress.getLocalHost().getHostAddress(),
+		this.host = InetAddress.getLocalHost().getHostAddress();
+		this.ID = this.host + ":" + getPort();
+		RegistrationRequest registrationRequest = new RegistrationRequest(this.host,
 				getPort());
 
 		System.out.println("Sending registration request...");
@@ -163,7 +238,7 @@ public class MessagingNode implements Node {
 
 	public void deregister(String registryHost, int registryPort) throws IOException {
 		System.out.println("Creating deregistration request...");
-		DeregisterRequest deregisterRequest = new DeregisterRequest(InetAddress.getLocalHost().getHostAddress(),
+		DeregisterRequest deregisterRequest = new DeregisterRequest(this.host,
 				getPort());
 
 		System.out.println("Sending deregistration request....");
@@ -193,7 +268,7 @@ public class MessagingNode implements Node {
 	@Override
 	public String toString() {
 		try {
-			return InetAddress.getLocalHost().getHostAddress() + ":" + this.serverThread.getPort();
+			return this.host + ":" + this.serverThread.getPort();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}

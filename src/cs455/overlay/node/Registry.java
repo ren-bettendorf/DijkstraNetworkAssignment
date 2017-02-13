@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Scanner;
 
 import cs455.overlay.dijkstra.Graph;
@@ -16,9 +17,11 @@ import cs455.overlay.wireformats.DeregisterRequest;
 import cs455.overlay.wireformats.DeregisterResponse;
 import cs455.overlay.wireformats.Event;
 import cs455.overlay.wireformats.LinkWeights;
+import cs455.overlay.wireformats.MessagingNodesList;
 import cs455.overlay.wireformats.Protocols;
 import cs455.overlay.wireformats.RegistrationRequest;
 import cs455.overlay.wireformats.RegistrationResponse;
+import cs455.overlay.wireformats.TaskInitiate;
 
 public class Registry implements Node {
 
@@ -62,21 +65,47 @@ public class Registry implements Node {
 				if (registry.getNodesConnectedSize() >= 10) {
 					System.out.println("Creating overlay setup...");
 					registry.setupOverlay(4);
+					registry.assignWeights();
+					registry.sendLinkWeights();
+					registry.sendConnectionList();
 				} else {
 					System.out.println(
 							"Can't create overlay due to insufficient nodes: " + registry.getNodesConnectedSize());
 				}
-			} else if (userInput.equals("assign")) {
-				registry.assignWeights();
-			} else if (userInput.equals("list-weights")) {
-				registry.listNodes();
-			} else if (userInput.equals("send-overlay-link-weights")) {
-				registry.sendLinkWeights();
 			} else if (userInput.equals("list-messaging-nodes")) {
 				registry.listNodes();
+			} else if (userInput.equals("start")) {
+				registry.startTasks(10);
 			}
 		}
 		keyboard.close();
+	}
+
+	private void startTasks(int rounds) {
+		TaskInitiate task = new TaskInitiate(rounds);
+		for(TCPSender sender : messageNodeConnections.values()) {
+			try {
+				sender.sendData(task.getBytes());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void sendConnectionList() {
+		HashMap<Vertex, ArrayList<Vertex>> connections = this.graph.getConnectionsHashMap();
+		for(Entry<Vertex, ArrayList<Vertex>>  entry : connections.entrySet()) {
+			String nodesList = "";
+			for(Vertex vertex : entry.getValue()) {
+				nodesList += vertex.toString() + "\n";
+			}
+			MessagingNodesList list = new MessagingNodesList(entry.getValue().size(), nodesList);
+			try {
+				messageNodeConnections.get(entry.getKey().getID()).sendData(list.getBytes());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void listNodes() {
