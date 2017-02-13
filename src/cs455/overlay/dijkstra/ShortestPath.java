@@ -106,7 +106,9 @@ public class ShortestPath {
 			int weight = 0;
 			ArrayList<Vertex> route = new ArrayList<Vertex>(relayCache.get(target));
 			Vertex source = route.remove(0);
-			for(Vertex step : relacyCache.get(target)) {
+			System.out.println("Route Length " + route.size());
+			for(Vertex step : route) {
+				System.out.println("Adding " + graph.getEdgeWeight(source, step) + " to weight " + weight);
 				weight += graph.getEdgeWeight(source, step);
 				source = step;
 			}
@@ -121,10 +123,8 @@ public class ShortestPath {
 		String path = "";
 		route.remove(0);
 		for(Vertex vertex : route) {
-			path += vertex.getID() + "\n";
+			path += vertex.getID() + " ";
 		}
-		path = path.substring(0, path.lastIndexOf("\n"));
-		
 		return path;
 	}
 }

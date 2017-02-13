@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import cs455.overlay.dijkstra.Edge;
 import cs455.overlay.dijkstra.Graph;
@@ -27,14 +29,14 @@ public class MessagingNode implements Node {
 	private Thread thread;
 	private HashMap<String, TCPSender> messageNodeConnections;
 	private ShortestPath path;
-	private long sum;
-	private int messageReceived, messageSent;
+	private AtomicLong sum;
+	private AtomicInteger messageReceived, messageSent;
 
 	public MessagingNode() throws IOException {
 		messageNodeConnections = new HashMap<String, TCPSender>();
-		sum = 0;
-		messageReceived = 0;
-		messageSent = 0;
+		sum = new AtomicLong(0);
+		messageReceived = new AtomicInteger(0);
+		messageSent = new AtomicInteger(0);
 	}
 
 	// java cs455.overlay.node.MessagingNode registry_host registry_port
@@ -111,13 +113,11 @@ public class MessagingNode implements Node {
 			break;
 		case Protocols.RELAY_CONNECTION:
 			RelayConnection relayConnection = (RelayConnection) event;
-			System.out.println("Received RelayConnection");
 			messageNodeConnections.put(relayConnection.getConnection(), new TCPSender(relayConnection.getSocket()));
 			break;
 		case Protocols.TASK_INITIATE:
 			TaskInitiate task = (TaskInitiate) event;
 			startRounds(task.getRoundNumber());
-			System.out.println("MessageReceived " + messageReceived + " MessageSent " + messageSent + " Sum " + sum);
 			break;
 		case Protocols.RELAY_MESSAGE:
 			RelayMessage message = (RelayMessage) event;
@@ -127,23 +127,24 @@ public class MessagingNode implements Node {
 	}
 
 	private void consumeMessage(RelayMessage message) {
-		String[] relayPaths = message.getConnections().split("\n");
-		messageReceived++;
+		String[] relayPaths = message.getConnections().split(" ");
+		System.out.println("Updated messageReceived " + messageReceived.incrementAndGet());
 		System.out.println("Relay Path Length " + relayPaths.length + " Message " + message.getConnections());
-		if( relayPaths[0].equals(this.ID) ) {
+		if( relayPaths.length > 1 ) {
 			String connections = "";
 			for(int i = 1; i < relayPaths.length; i++) {
-				connections += relayPaths[i] + "\n";
+				connections += relayPaths[i] + " ";
 			}
 			RelayMessage relay = new RelayMessage(message.getData(), connections);
-			messageSent++;
+
+			System.out.println("Updated messageSent " + messageSent.incrementAndGet());
 			try {
 				messageNodeConnections.get(relayPaths[1]).sendData(relay.getBytes());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else {
-			sum += message.getData();
+			sum.addAndGet(message.getData());
 		}
 	}
 
@@ -166,7 +167,7 @@ public class MessagingNode implements Node {
 				RelayMessage message = new RelayMessage(data, path.getCachedRoute(new Vertex(node, 4)));
 				System.out.println("Sending " + node + " data " + data);
 				System.out.println("Route " + path.getCachedRoute(new Vertex(node, 4)));
-				messageSent++;
+				messageSent.incrementAndGet();
 				try {
 					messageNodeConnections.get(node).sendData(message.getBytes());
 				} catch (IOException e) {

@@ -132,9 +132,9 @@ public class Graph {
 		return overlayStatus;
 	}
 
-	public int getEdgeWeight(Vertex source, Vertex step) {
+	public int getEdgeWeight(Vertex source, Vertex target) {
 		for (Edge edge : edges) {
-			if ( ( edge.getSource().equals(source) && edge.getDestination().equals(step) ) || ( edge.getSource().equals(step) && edge.getDestination().equals(source) ) ) {
+			if ( ( edge.getSource().equals(source) && edge.getDestination().equals(target) ) || ( edge.getSource().equals(target) && edge.getDestination().equals(source) ) ) {
 				return edge.getWeight();
 			}
 		}
