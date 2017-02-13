@@ -25,11 +25,11 @@ public class ShortestPath {
 		this.pathWeights = new HashMap<Vertex, Integer>();
 		this.predecessors = new HashMap<Vertex, Vertex>();
 
-		execute();
+		findShortestPaths();
 		cacheRoutes();
 	}
 
-	public void execute() {
+	public void findShortestPaths() {
 		setInitialDistances();
 		unsettledVertices.add(startVertex);
 
@@ -103,7 +103,13 @@ public class ShortestPath {
 		String printedPath = "";
 
 		for (Vertex target : otherVertices) {
-			int weight = pathWeights.get(target);
+			int weight = 0;
+			ArrayList<Vertex> route = new ArrayList<Vertex>(relayCache.get(target));
+			Vertex source = route.remove(0);
+			for(Vertex step : relacyCache.get(target)) {
+				weight += graph.getEdgeWeight(source, step);
+				source = step;
+			}
 			printedPath += target.getID() + "--" + weight + "--";
 		}
 
