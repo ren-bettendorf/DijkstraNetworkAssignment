@@ -72,7 +72,7 @@ public class MessagingNode implements Node {
 		String userInput = "";
 		while (!userInput.equals("exit-overlay")) {
 			userInput = keyboard.nextLine();
-			if (userInput.equals("deregister")) {
+			if (userInput.equals("exit-overlay")) {
 				try {
 					mNode.deregister(registryHost, registryPort);
 				} catch (IOException e) {
@@ -144,14 +144,6 @@ public class MessagingNode implements Node {
 		resetTrackers();
 	}
 
-	private void resetTrackers() {
-		sumReceived.set(0);
-		sumSent.set(0);
-		messageReceived.set(0);
-		messageSent.set(0);
-		messageRelayed.set(0);
-	}
-
 	private void sendTaskCompleteMessage() {
 		TaskComplete task = new TaskComplete(this.host, getPort());
 		try {
@@ -168,7 +160,7 @@ public class MessagingNode implements Node {
 			for (int i = 1; i < relayPaths.length; i++) {
 				connections += relayPaths[i] + " ";
 			}
-			RelayMessage relay = new RelayMessage(message.getData(), connections);
+			RelayMessage relay = new RelayMessage(message.getPayload(), connections);
 			messageRelayed.incrementAndGet();
 			try {
 				messageNodeConnections.get(relayPaths[1]).sendData(relay.getBytes());
@@ -177,7 +169,7 @@ public class MessagingNode implements Node {
 			}
 		} else {
 			messageReceived.incrementAndGet();
-			sumReceived.addAndGet(message.getData());
+			sumReceived.addAndGet(message.getPayload());
 		}
 	}
 
@@ -195,13 +187,13 @@ public class MessagingNode implements Node {
 			for (int nodes = 0; nodes < 5; nodes++) {
 				
 				Random random = new Random();
-				int data = random.nextInt(2147483647);
+				int payload = random.nextInt(2147483647);
 				if (random.nextDouble() < 0.5) {
-					data *= -1;
+					payload *= -1;
 				}
-				sumSent.getAndAdd(data);
+				sumSent.getAndAdd(payload);
 				
-				RelayMessage message = new RelayMessage(data, nodePath);
+				RelayMessage message = new RelayMessage(payload, nodePath);
 				messageSent.incrementAndGet();
 				try {
 					messageNodeConnections.get(firstNode).sendData(message.getBytes());
@@ -210,11 +202,6 @@ public class MessagingNode implements Node {
 				}
 			}
 		}
-	}
-
-	private String pickRandomNode() {
-		ArrayList<String> nodes = new ArrayList<String>(path.getOtherVertices());
-		return (String) nodes.get(new Random().nextInt(nodes.size()));
 	}
 
 	private void setMessagingNodesList(MessagingNodesList nodeList) {
@@ -233,7 +220,6 @@ public class MessagingNode implements Node {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
 		}
 		System.out.println("All connections are established. Number of connections: " + nodeList.getNumberNodes());
 		
@@ -285,10 +271,22 @@ public class MessagingNode implements Node {
 			registrySocket.close();
 		}
 	}
+	
+	private String pickRandomNode() {
+		ArrayList<String> nodes = new ArrayList<String>(path.getOtherVertices());
+		return (String) nodes.get(new Random().nextInt(nodes.size()));
+	}
 
+	private void resetTrackers() {
+		sumReceived.set(0);
+		sumSent.set(0);
+		messageReceived.set(0);
+		messageSent.set(0);
+		messageRelayed.set(0);
+	}
+	
 	public void close() {
 		this.serverThread.endThread();
-
 	}
 
 	public int getPort() {
@@ -302,7 +300,7 @@ public class MessagingNode implements Node {
 	@Override
 	public String toString() {
 		try {
-			return this.host + ":" + this.serverThread.getPort();
+			return this.host + ":" + getPort();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}

@@ -11,12 +11,12 @@ import java.io.IOException;
 public class RelayMessage implements Event, Protocols {
 	private int type;
 	private String connectList;
-	private int data;
+	private int payload;
 	
-	public RelayMessage(int data, String connectList) {
+	public RelayMessage(int payload, String connectList) {
 		this.type = Protocols.RELAY_MESSAGE;
 		this.connectList = connectList;
-		this.data = data;
+		this.payload = payload;
 	}
 	
 	public RelayMessage(byte[] marshalledBytes) throws IOException {
@@ -31,7 +31,7 @@ public class RelayMessage implements Event, Protocols {
 		
 		connectList = new String(connectLinksBytes);
 		
-		data = din.readInt();
+		payload = din.readInt();
 		
 		baInputStream.close();
 		din.close();
@@ -51,7 +51,7 @@ public class RelayMessage implements Event, Protocols {
 		dout.writeInt(connectLinksLength);
 		dout.write(connectLinksBytes);
 
-		dout.writeInt(data);
+		dout.writeInt(payload);
 		
 		dout.flush();
 		marshalledBytes = baOutputStream.toByteArray();
@@ -62,8 +62,8 @@ public class RelayMessage implements Event, Protocols {
 		return marshalledBytes;
 	}
 	
-	public int getData() {
-		return this.data;
+	public int getPayload() {
+		return this.payload;
 	}
 	
 	public String getConnections() {

@@ -79,13 +79,14 @@ public class Registry implements Node {
 				if (registry.getNodesConnectedSize() >= 10) {
 					System.out.println("Creating overlay setup...");
 					registry.setupOverlay(4);
-					registry.assignWeights();
-					registry.sendLinkWeights();
 					registry.sendConnectionList();
 				} else {
 					System.out.println(
 							"Can't create overlay due to insufficient nodes: " + registry.getNodesConnectedSize());
 				}
+			} else if(userInput.equals("send-overlay-link-weights")) {
+				registry.assignWeights();
+				registry.sendLinkWeights();
 			} else if (userInput.equals("list-messaging-nodes")) {
 				registry.listNodes();
 			} else if (userInput.contains("start")) {
