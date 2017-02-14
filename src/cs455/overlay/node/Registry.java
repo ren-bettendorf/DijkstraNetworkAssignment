@@ -189,13 +189,10 @@ public class Registry implements Node {
 			System.out.println("Summaries have been collected.");
 
 			System.out.println(displayResults);
-			System.out.println("\t\t\t" + sumMessageSent + "\t\t" + sumMessageReceived + "\t\t\t" + sumSumSent.get()
+			System.out.println("SUM\t\t" + sumMessageSent + "\t\t" + sumMessageReceived + "\t\t\t" + sumSumSent.get()
 					+ "\t\t" + sumSumReceived.get());
 
-			sumSumSent.set(0);
-			sumSumReceived.set(0);
-			sumMessageSent.set(0);
-			sumMessageReceived.set(0);
+			resetTrackers();
 
 		}
 	}
@@ -286,8 +283,8 @@ public class Registry implements Node {
 		}
 
 		System.out.println(response);
-		RegistrationResponse registrationResponse = new RegistrationResponse(regResult, response);
 		System.out.println("Creating registration response...");
+		RegistrationResponse registrationResponse = new RegistrationResponse(regResult, response);
 
 		System.out.println("Sending registration report...");
 		sender.sendData(registrationResponse.getBytes());
@@ -309,6 +306,13 @@ public class Registry implements Node {
 		this.thread.start();
 	}
 
+	private void setTrackers() {
+		sumSumSent.set(0);
+		sumSumReceived.set(0);
+		sumMessageSent.set(0);
+		sumMessageReceived.set(0);
+	}
+	
 	public int getNodesConnectedSize() {
 		return this.messageNodeConnections.size();
 	}
