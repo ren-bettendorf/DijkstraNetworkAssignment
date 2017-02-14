@@ -9,8 +9,8 @@ public interface Protocols {
 	final int LINK_WEIGHTS = 5;
 	final int TASK_INITIATE = 6;
 	final int TASK_COMPLETE = 7;
-	final int PULL_TRAFFIC_SUMMARY = 8;
-	final int TRAFFIC_SUMMARY = 9;
+	final int TASK_SUMMARY_REQUEST = 8;
+	final int TASK_SUMMARY_RESPONSE = 9;
 	final int RELAY_CONNECTION = 10;
 	final int RELAY_MESSAGE = 11;
 }

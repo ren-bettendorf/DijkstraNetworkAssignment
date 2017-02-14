@@ -43,10 +43,17 @@ public class EventFactory {
 				return new LinkWeights(data);
 			case Protocols.RELAY_CONNECTION:
 				return new RelayConnection(data, socket);
-			case Protocols.TASK_INITIATE:
-				return new TaskInitiate(data);
 			case Protocols.RELAY_MESSAGE:
 				return new RelayMessage(data);
+			case Protocols.TASK_INITIATE:
+				return new TaskInitiate(data);
+			case Protocols.TASK_COMPLETE:
+				return new TaskComplete(data);
+			case Protocols.TASK_SUMMARY_REQUEST:
+				return new TaskSummaryRequest(data);
+			case Protocols.TASK_SUMMARY_RESPONSE:
+				return new TaskSummaryResponse(data);
+
 			default:
 				return null;
 			}

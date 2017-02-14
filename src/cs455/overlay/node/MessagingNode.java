@@ -29,14 +29,17 @@ public class MessagingNode implements Node {
 	private Thread thread;
 	private HashMap<String, TCPSender> messageNodeConnections;
 	private ShortestPath path;
-	private AtomicLong sum;
-	private AtomicInteger messageReceived, messageSent;
+	private AtomicLong sumReceived, sumSent;
+	private AtomicInteger messageReceived, messageSent, messageRelayed;
 
 	public MessagingNode() throws IOException {
+		this.host = InetAddress.getLocalHost().getHostAddress();
 		messageNodeConnections = new HashMap<String, TCPSender>();
-		sum = new AtomicLong(0);
+		sumReceived = new AtomicLong(0);
+		sumSent = new AtomicLong(0);
 		messageReceived = new AtomicInteger(0);
 		messageSent = new AtomicInteger(0);
+		messageRelayed = new AtomicInteger(0);
 	}
 
 	// java cs455.overlay.node.MessagingNode registry_host registry_port
@@ -118,58 +121,90 @@ public class MessagingNode implements Node {
 		case Protocols.TASK_INITIATE:
 			TaskInitiate task = (TaskInitiate) event;
 			startRounds(task.getRoundNumber());
+			sendTaskCompleteMessage();
 			break;
 		case Protocols.RELAY_MESSAGE:
-			RelayMessage message = (RelayMessage) event;
-			consumeMessage(message);
+			consumeMessage((RelayMessage) event);
 			break;
+		case Protocols.TASK_SUMMARY_REQUEST:
+			sendTaskSummaryResponse();
+			break;
+		}
+	}
+
+	private void sendTaskSummaryResponse() {
+		TaskSummaryResponse task = new TaskSummaryResponse(this.host, getPort(), messageSent.get(), sumSent.get(),
+				messageReceived.get(), sumReceived.get(), messageRelayed.get());
+		System.out.println("Sending task summary response");
+		try {
+			registrySender.sendData(task.getBytes());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		resetTrackers();
+	}
+
+	private void resetTrackers() {
+		sumReceived.set(0);
+		sumSent.set(0);
+		messageReceived.set(0);
+		messageSent.set(0);
+		messageRelayed.set(0);
+	}
+
+	private void sendTaskCompleteMessage() {
+		TaskComplete task = new TaskComplete(this.host, getPort());
+		try {
+			registrySender.sendData(task.getBytes());
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
 	private void consumeMessage(RelayMessage message) {
 		String[] relayPaths = message.getConnections().split(" ");
-		System.out.println("Updated messageReceived " + messageReceived.incrementAndGet());
-		System.out.println("Relay Path Length " + relayPaths.length + " Message " + message.getConnections());
-		if( relayPaths.length > 1 ) {
+		if ( !relayPaths[relayPaths.length-1].equals(this.ID) ) {
 			String connections = "";
-			for(int i = 1; i < relayPaths.length; i++) {
+			for (int i = 1; i < relayPaths.length; i++) {
 				connections += relayPaths[i] + " ";
 			}
 			RelayMessage relay = new RelayMessage(message.getData(), connections);
-
-			System.out.println("Updated messageSent " + messageSent.incrementAndGet());
+			messageRelayed.incrementAndGet();
 			try {
 				messageNodeConnections.get(relayPaths[1]).sendData(relay.getBytes());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		} else {
-			sum.addAndGet(message.getData());
+			messageReceived.incrementAndGet();
+			sumReceived.addAndGet(message.getData());
 		}
 	}
 
 	private void startRounds(int roundNumber) {
-		for(int round = 0; round < roundNumber; round++) {
+		for (int round = 0; round < roundNumber; round++) {
+			if(round % (roundNumber/5) == 0) {
+				System.out.println("[STATUS] On round " + round);
+			}
 			ArrayList<String> nodesToMessage = new ArrayList<String>();
-			for(int nodes = 0; nodes < 5; nodes++) {
-				String node = null;
-				while(!nodesToMessage.contains(node)) {
-					node = pickRandomNode();
-					if(!nodesToMessage.contains(node)){
-						nodesToMessage.add(node);
-					}
-				}
+
+			String node = pickRandomNode();
+			String nodePath = path.getCachedRoute(new Vertex(node, 4));
+
+			String firstNode = nodePath.split(" ")[0];
+			for (int nodes = 0; nodes < 5; nodes++) {
+				
 				Random random = new Random();
 				int data = random.nextInt(2147483647);
-				if(random.nextDouble() < 0.5) {
+				if (random.nextDouble() < 0.5) {
 					data *= -1;
 				}
-				RelayMessage message = new RelayMessage(data, path.getCachedRoute(new Vertex(node, 4)));
-				System.out.println("Sending " + node + " data " + data);
-				System.out.println("Route " + path.getCachedRoute(new Vertex(node, 4)));
+				sumSent.getAndAdd(data);
+				
+				RelayMessage message = new RelayMessage(data, nodePath);
 				messageSent.incrementAndGet();
 				try {
-					messageNodeConnections.get(node).sendData(message.getBytes());
+					messageNodeConnections.get(firstNode).sendData(message.getBytes());
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -178,8 +213,8 @@ public class MessagingNode implements Node {
 	}
 
 	private String pickRandomNode() {
-		String[] nodes = messageNodeConnections.keySet().toArray(new String[0]);
-		return (String) nodes[new Random().nextInt(nodes.length)];
+		ArrayList<String> nodes = new ArrayList<String>(path.getOtherVertices());
+		return (String) nodes.get(new Random().nextInt(nodes.size()));
 	}
 
 	private void setMessagingNodesList(MessagingNodesList nodeList) {
@@ -191,6 +226,8 @@ public class MessagingNode implements Node {
 
 				TCPSender sender = new TCPSender(socket);
 				RelayConnection connection = new RelayConnection(this.ID);
+				TCPReceiverThread thread = new TCPReceiverThread(this, socket);
+				new Thread(thread).start();
 				sender.sendData(connection.getBytes());
 				messageNodeConnections.put(list[index], sender);
 			} catch (IOException e) {
@@ -199,10 +236,10 @@ public class MessagingNode implements Node {
 
 		}
 		System.out.println("All connections are established. Number of connections: " + nodeList.getNumberNodes());
+		
 	}
 
 	private ArrayList<Edge> setLinkWeights(LinkWeights linkWeights) {
-		int numberLinks = linkWeights.getNumberLinks();
 		ArrayList<Edge> returnEdges = new ArrayList<Edge>();
 		String[] edges = linkWeights.getListWeights().split("\n");
 		for (int i = 0; i < edges.length; i++) {
@@ -223,10 +260,8 @@ public class MessagingNode implements Node {
 
 	public void register(String registryHost, int registryPort) throws IOException {
 		System.out.println("Creating registration request...");
-		this.host = InetAddress.getLocalHost().getHostAddress();
 		this.ID = this.host + ":" + getPort();
-		RegistrationRequest registrationRequest = new RegistrationRequest(this.host,
-				getPort());
+		RegistrationRequest registrationRequest = new RegistrationRequest(this.host, getPort());
 
 		System.out.println("Sending registration request...");
 		registrySocket = new Socket(registryHost, registryPort);
@@ -239,8 +274,7 @@ public class MessagingNode implements Node {
 
 	public void deregister(String registryHost, int registryPort) throws IOException {
 		System.out.println("Creating deregistration request...");
-		DeregisterRequest deregisterRequest = new DeregisterRequest(this.host,
-				getPort());
+		DeregisterRequest deregisterRequest = new DeregisterRequest(this.host, getPort());
 
 		System.out.println("Sending deregistration request....");
 		registrySender.sendData(deregisterRequest.getBytes());
@@ -251,12 +285,11 @@ public class MessagingNode implements Node {
 			registrySocket.close();
 		}
 	}
-	
+
 	public void close() {
 		this.serverThread.endThread();
 
 	}
-	
 
 	public int getPort() {
 		return this.port;
@@ -265,7 +298,7 @@ public class MessagingNode implements Node {
 	public void setPort(int port) {
 		this.port = port;
 	}
-	
+
 	@Override
 	public String toString() {
 		try {

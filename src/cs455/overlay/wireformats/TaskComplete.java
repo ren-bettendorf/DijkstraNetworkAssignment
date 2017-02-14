@@ -63,7 +63,10 @@ public class TaskComplete implements Event, Protocols {
 	
 	@Override
 	public int getType() {
-		// TODO Auto-generated method stub
 		return this.type;
+	}
+
+	public String getNodeID() {
+		return this.hostname + ":" + this.port;
 	}
 }

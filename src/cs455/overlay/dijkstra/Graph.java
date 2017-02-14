@@ -50,8 +50,6 @@ public class Graph {
 		possibleVertices.addAll(vertices);
 
 		setupFirstRoundConnections();
-		System.out.println("Number Edges: " + edges.size());
-
 		int count = 0;
 		while (!possibleVertices.isEmpty()) {
 			

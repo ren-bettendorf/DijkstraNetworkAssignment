@@ -33,7 +33,7 @@ public class ShortestPath {
 		setInitialDistances();
 		unsettledVertices.add(startVertex);
 
-		while (unsettledVertices.size() > 0) {
+		while (!unsettledVertices.isEmpty()) {
 			Vertex vertex = getClosestVertex();
 			settledVertices.add(vertex);
 			unsettledVertices.remove(vertex);
@@ -71,12 +71,13 @@ public class ShortestPath {
 	}
 
 	private Vertex getClosestVertex() {
-		Vertex minimum = unsettledVertices.remove(0);
+		Vertex minimum = unsettledVertices.get(0);
 		for (Vertex vertex : unsettledVertices) {
 			if (pathWeights.get(vertex) < pathWeights.get(minimum)) {
 				minimum = vertex;
 			}
 		}
+		unsettledVertices.remove(minimum);
 		return minimum;
 	}
 
@@ -84,10 +85,11 @@ public class ShortestPath {
 		ArrayList<Vertex> path = new ArrayList<Vertex>();
 		Vertex step = target;
 		path.add(step);
-		while (predecessors.get(step) != null) {
+		while (!predecessors.get(step).equals(startVertex)) {
 			step = predecessors.get(step);
 			path.add(step);
 		}
+		path.add(startVertex);
 		Collections.reverse(path);
 		return path;
 	}
@@ -106,9 +108,7 @@ public class ShortestPath {
 			int weight = 0;
 			ArrayList<Vertex> route = new ArrayList<Vertex>(relayCache.get(target));
 			Vertex source = route.remove(0);
-			System.out.println("Route Length " + route.size());
 			for(Vertex step : route) {
-				System.out.println("Adding " + graph.getEdgeWeight(source, step) + " to weight " + weight);
 				weight += graph.getEdgeWeight(source, step);
 				source = step;
 			}
@@ -126,5 +126,14 @@ public class ShortestPath {
 			path += vertex.getID() + " ";
 		}
 		return path;
+	}
+
+
+	public ArrayList<String> getOtherVertices() {
+		ArrayList<String> otherVerticesStrings = new ArrayList<String>();
+		for(Vertex vertex : otherVertices) {
+			otherVerticesStrings.add(vertex.getID());
+		}
+		return otherVerticesStrings;
 	}
 }

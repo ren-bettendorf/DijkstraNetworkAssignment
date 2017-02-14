@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import cs455.overlay.dijkstra.Graph;
 import cs455.overlay.dijkstra.Vertex;
@@ -21,7 +23,10 @@ import cs455.overlay.wireformats.MessagingNodesList;
 import cs455.overlay.wireformats.Protocols;
 import cs455.overlay.wireformats.RegistrationRequest;
 import cs455.overlay.wireformats.RegistrationResponse;
+import cs455.overlay.wireformats.TaskComplete;
 import cs455.overlay.wireformats.TaskInitiate;
+import cs455.overlay.wireformats.TaskSummaryRequest;
+import cs455.overlay.wireformats.TaskSummaryResponse;
 
 public class Registry implements Node {
 
@@ -31,8 +36,17 @@ public class Registry implements Node {
 	private TCPServerThread serverThread;
 	private Thread thread;
 	private Graph graph;
+	private ArrayList<String> tasksComplete;
+	private String displayResults;
+	private AtomicLong sumSumSent, sumSumReceived;
+	private AtomicInteger sumMessageSent, sumMessageReceived;
 
 	public Registry(int port) {
+		sumSumSent = new AtomicLong(0);
+		sumSumReceived = new AtomicLong(0);
+		sumMessageSent = new AtomicInteger(0);
+		sumMessageReceived = new AtomicInteger(0);
+
 		try {
 			this.host = InetAddress.getLocalHost().getHostAddress();
 		} catch (UnknownHostException e) {
@@ -74,16 +88,25 @@ public class Registry implements Node {
 				}
 			} else if (userInput.equals("list-messaging-nodes")) {
 				registry.listNodes();
-			} else if (userInput.equals("start")) {
-				registry.startTasks(10);
+			} else if (userInput.contains("start")) {
+				int rounds = 0;
+				try {
+					rounds = Integer.parseInt(userInput.split(" ")[1]);
+					System.out.println("Starting " + rounds + " rounds");
+				} catch (NumberFormatException nfe) {
+					System.out.println("Sorry please try again with 'start number-of-rounds'");
+				}
+				registry.startTasks(rounds);
 			}
 		}
 		keyboard.close();
 	}
 
 	private void startTasks(int rounds) {
+		tasksComplete = new ArrayList<String>(messageNodeConnections.keySet());
+		displayResults = "Node ID\t\t\tMessage Sent\tMessage Received\tSum Sent Messages\tSum Received Messages\tMessage Relayed\n";
 		TaskInitiate task = new TaskInitiate(rounds);
-		for(TCPSender sender : messageNodeConnections.values()) {
+		for (TCPSender sender : messageNodeConnections.values()) {
 			try {
 				sender.sendData(task.getBytes());
 			} catch (IOException e) {
@@ -94,9 +117,9 @@ public class Registry implements Node {
 
 	private void sendConnectionList() {
 		HashMap<Vertex, ArrayList<Vertex>> connections = this.graph.getConnectionsHashMap();
-		for(Entry<Vertex, ArrayList<Vertex>>  entry : connections.entrySet()) {
+		for (Entry<Vertex, ArrayList<Vertex>> entry : connections.entrySet()) {
 			String nodesList = "";
-			for(Vertex vertex : entry.getValue()) {
+			for (Vertex vertex : entry.getValue()) {
 				nodesList += vertex.toString() + "\n";
 			}
 			MessagingNodesList list = new MessagingNodesList(entry.getValue().size(), nodesList);
@@ -120,7 +143,6 @@ public class Registry implements Node {
 			try {
 				sender.sendData(linkWeights.getBytes());
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -132,7 +154,6 @@ public class Registry implements Node {
 
 	@Override
 	public synchronized void onEvent(Event event) throws IOException {
-		// TODO Auto-generated method stub
 		int eventType = event.getType();
 		switch (eventType) {
 		case Protocols.REGISTER_REQUEST:
@@ -143,8 +164,65 @@ public class Registry implements Node {
 			DeregisterRequest derequest = (DeregisterRequest) event;
 			deregisterNode(derequest);
 			break;
+		case Protocols.TASK_COMPLETE:
+			handleTaskComplete((TaskComplete) event);
+			break;
+		case Protocols.TASK_SUMMARY_RESPONSE:
+			handleTaskSummaryResponse((TaskSummaryResponse) event);
+			break;
 		}
 
+	}
+
+	private void handleTaskSummaryResponse(TaskSummaryResponse task) {
+		tasksComplete.remove(task.getNodeID());
+		displayResults += task.getNodeID() + "\t" + task.getMessageSent() + "\t\t" + task.getMessageReceived()
+				+ "\t\t\t" + task.getSumSent() + "\t\t" + task.getSumReceived() + "\t\t" + task.getMessageRelayed();
+		sumSumSent.addAndGet(task.getSumSent());
+		sumSumReceived.addAndGet(task.getSumReceived());
+		sumMessageSent.addAndGet(task.getMessageSent());
+		sumMessageReceived.addAndGet(task.getMessageReceived());
+		if (!tasksComplete.isEmpty()) {
+			displayResults += "\n";
+		} else {
+			System.out.println("Summaries have been collected.");
+
+			System.out.println(displayResults);
+			System.out.println("\t\t\t" + sumMessageSent + "\t\t" + sumMessageReceived + "\t\t\t" + sumSumSent.get()
+					+ "\t\t" + sumSumReceived.get());
+
+			sumSumSent.set(0);
+			sumSumReceived.set(0);
+			sumMessageSent.set(0);
+			sumMessageReceived.set(0);
+
+		}
+	}
+
+	private void handleTaskComplete(TaskComplete task) {
+		tasksComplete.remove(task.getNodeID());
+		if (tasksComplete.isEmpty()) {
+
+			System.out.println("Tasks have completed. Waiting for messages to finish relay");
+			try {
+				Thread.sleep(20000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			pullTrafficSummary();
+		}
+	}
+
+	private void pullTrafficSummary() {
+		TaskSummaryRequest request = new TaskSummaryRequest();
+		tasksComplete = new ArrayList<String>(messageNodeConnections.keySet());
+		for (TCPSender sender : messageNodeConnections.values()) {
+			try {
+				sender.sendData(request.getBytes());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private void deregisterNode(DeregisterRequest derequest) {
@@ -223,7 +301,7 @@ public class Registry implements Node {
 		graph.setupOverlay(vertices, connectionsRequired);
 		System.out.println("Overlay setup");
 	}
-	
+
 	public void startServerThread(TCPServerThread serverThread) {
 		this.serverThread = serverThread;
 		this.thread = new Thread(this.serverThread);
