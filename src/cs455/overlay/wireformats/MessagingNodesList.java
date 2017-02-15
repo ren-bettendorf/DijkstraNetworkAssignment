@@ -14,12 +14,23 @@ public class MessagingNodesList implements Event, Protocols {
 	private String connectList;
 	private int numberNodes;
 	
+	/**
+	* Creates MessagingNodesList object for marshalling bytes
+	*
+	* @param  numberNodes  Integer for the number of nodes to be connected to
+	* @param  connectList The ID's of the nodes to be connected to
+	*/
 	public MessagingNodesList(int numberNodes, String connectList) {
 		this.type = Protocols.MESSAGING_NODES_LIST;
 		this.connectList = connectList;
 		this.numberNodes = numberNodes;
 	}
 	
+	/**
+	* Creates MessagingNodesList object for unmarshalling bytes
+	*
+	* @param  marshalledBytes  Marshalled bytes to be unwrapped
+	*/
 	public MessagingNodesList(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
@@ -38,6 +49,11 @@ public class MessagingNodesList implements Event, Protocols {
 		din.close();
 	}
 	
+	/**
+	* Returns the marshalled bytes for sending a message
+	*
+	* @return marshalled bytes
+	*/
 	@Override
 	public byte[] getBytes() throws IOException {
 		byte[] marshalledBytes = null;
@@ -64,17 +80,31 @@ public class MessagingNodesList implements Event, Protocols {
 		return marshalledBytes;
 	}
 	
-	@Override
-	public int getType() {
-		// TODO Auto-generated method stub
-		return this.type;
-	}
-	
+	/**
+	* Getter function for the numberNodes
+	*
+	* @return numberNodes
+	*/
 	public int getNumberNodes() {
 		return this.numberNodes;
 	}
 	
+	/**
+	* Getter function for the connectList
+	*
+	* @return connectList
+	*/
 	public String getConnectList() {
 		return this.connectList;
+	}
+	
+	/**
+	* Getter function for the message type
+	*
+	* @return message type
+	*/
+	@Override
+	public int getType() {
+		return this.type;
 	}
 }

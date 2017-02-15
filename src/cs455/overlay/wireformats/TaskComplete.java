@@ -13,12 +13,23 @@ public class TaskComplete implements Event, Protocols {
 	private String hostname;
 	private int port;
 	
+	/**
+	* Creates TaskComplete object for marshalling bytes
+	*
+	* @param  hostname  Contains the hostname of the node that completed the task
+	* @param  port Contains the port of the node that completed the task
+	*/
 	public TaskComplete(String hostname, int port) {
 		this.type = Protocols.TASK_COMPLETE;
 		this.hostname = hostname;
 		this.port = port;
 	}
 	
+	/**
+	* Creates TaskComplete object for unmarshalling bytes
+	*
+	* @param  marshalledBytes  Marshalled bytes to be unwrapped
+	*/
 	public TaskComplete(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
@@ -36,6 +47,11 @@ public class TaskComplete implements Event, Protocols {
 		din.close();
 	}
 	
+	/**
+	* Returns the marshalled bytes for sending a message
+	*
+	* @return marshalled bytes
+	*/
 	@Override
 	public byte[] getBytes() throws IOException {
 		byte[] marshalledBytes = null;
@@ -60,13 +76,23 @@ public class TaskComplete implements Event, Protocols {
 		
 		return marshalledBytes;
 	}
+
+	/**
+	* Getter function for the NodeID list
+	*
+	* @return NodeID
+	*/
+	public String getNodeID() {
+		return this.hostname + ":" + this.port;
+	}
 	
+	/**
+	* Getter function for the type
+	*
+	* @return type
+	*/
 	@Override
 	public int getType() {
 		return this.type;
-	}
-
-	public String getNodeID() {
-		return this.hostname + ":" + this.port;
 	}
 }

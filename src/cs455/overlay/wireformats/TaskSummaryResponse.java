@@ -49,6 +49,11 @@ public class TaskSummaryResponse implements Event, Protocols {
 		din.close();
 	}
 	
+	/**
+	* Returns the marshalled bytes for sending a message
+	*
+	* @return marshalled bytes
+	*/
 	@Override
 	public byte[] getBytes() throws IOException {
 		byte[] marshalledBytes = null;
@@ -79,39 +84,84 @@ public class TaskSummaryResponse implements Event, Protocols {
 		return marshalledBytes;
 	}
 	
+	/**
+	* Getter function for the message type
+	*
+	* @return message type
+	*/
 	@Override
 	public int getType() {
 		return this.type;
 	}
 
+	/**
+	* Getter function for the hostname
+	*
+	* @return hostname
+	*/
 	public String getHostname() {
 		return hostname;
 	}
 
+	/**
+	* Getter function for the port
+	*
+	* @return port
+	*/
 	public int getPort() {
 		return port;
 	}
 
+	/**
+	* Getter function for the messageSent
+	*
+	* @return messageSent
+	*/
 	public int getMessageSent() {
 		return messageSent;
 	}
 
+	/**
+	* Getter function for the messageReceived
+	*
+	* @return messageReceived
+	*/
 	public int getMessageReceived() {
 		return messageReceived;
 	}
 
+	/**
+	* Getter function for the messageRelayed
+	*
+	* @return messageRelayed
+	*/
 	public int getMessageRelayed() {
 		return messageRelayed;
 	}
 
+	/**
+	* Getter function for the sumSent
+	*
+	* @return sumSent
+	*/
 	public long getSumSent() {
 		return sumSent;
 	}
 
+	/**
+	* Getter function for the sumReceived
+	*
+	* @return sumReceived
+	*/
 	public long getSumReceived() {
 		return sumReceived;
 	}
 
+	/**
+	* Getter function for the nodeID
+	*
+	* @return nodeID
+	*/
 	public String getNodeID() {
 		return this.hostname + ":" + this.port;
 	}

@@ -13,12 +13,23 @@ public class RelayMessage implements Event, Protocols {
 	private String connectList;
 	private int payload;
 	
+	/**
+	* Creates RelayMessage object for marshalling bytes
+	*
+	* @param  payload  Random integer to sum at final desitnation
+	* @param  connectList Path the payload will go along
+	*/
 	public RelayMessage(int payload, String connectList) {
 		this.type = Protocols.RELAY_MESSAGE;
 		this.connectList = connectList;
 		this.payload = payload;
 	}
 	
+	/**
+	* Creates RelayMessage object for unmarshalling bytes
+	*
+	* @param  marshalledBytes  Marshalled bytes to be unwrapped
+	*/
 	public RelayMessage(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
@@ -37,6 +48,11 @@ public class RelayMessage implements Event, Protocols {
 		din.close();
 	}
 	
+	/**
+	* Returns the marshalled bytes for sending a message
+	*
+	* @return marshalled bytes
+	*/
 	@Override
 	public byte[] getBytes() throws IOException {
 		byte[] marshalledBytes = null;
@@ -62,14 +78,29 @@ public class RelayMessage implements Event, Protocols {
 		return marshalledBytes;
 	}
 	
+	/**
+	* Getter function for the payload
+	*
+	* @return payload
+	*/
 	public int getPayload() {
 		return this.payload;
 	}
 	
+	/**
+	* Getter function for the connections list
+	*
+	* @return connect list
+	*/
 	public String getConnections() {
 		return this.connectList;
 	}
 
+	/**
+	* Getter function for the message type
+	*
+	* @return message type
+	*/
 	@Override
 	public int getType() {
 		return this.type;

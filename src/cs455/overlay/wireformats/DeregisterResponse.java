@@ -13,12 +13,23 @@ public class DeregisterResponse implements Event, Protocols {
 	private String response;
 	private byte result;
 	
+	/**
+	* Creates DeregisterResponse object for marshalling bytes
+	*
+	* @param  result  Success or failure is held here
+	* @param  response String holding reason for result
+	*/
 	public DeregisterResponse(byte result, String response) {
 		this.type = Protocols.DEREGISTER_RESPONSE;
 		this.result = result;
 		this.response = response;
 	}
 	
+	/**
+	* Creates DeregisterResponse object for marshalling bytes
+	*
+	* @param  marshalledBytes  Marshalled bytes to be unwrapped
+	*/
 	public DeregisterResponse(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
@@ -36,6 +47,11 @@ public class DeregisterResponse implements Event, Protocols {
 		din.close();
 	}
 	
+	/**
+	* Returns the marshalled bytes for sending a message
+	*
+	* @return marshalled bytes
+	*/
 	@Override
 	public byte[] getBytes() throws IOException {
 		byte[] marshalledBytes = null;
@@ -60,10 +76,20 @@ public class DeregisterResponse implements Event, Protocols {
 		return marshalledBytes;
 	}
 	
+	/**
+	* Getter function for the response
+	*
+	* @return response
+	*/
 	public String getResponse() {
 		return this.response;
 	}
 	
+	/**
+	* Getter function for the result
+	*
+	* @return result
+	*/
 	public byte getResult() {
 		return this.result;
 	}
@@ -71,9 +97,14 @@ public class DeregisterResponse implements Event, Protocols {
 	public byte getPort() {
 		return this.result;
 	}
+	
+	/**
+	* Getter function for the type
+	*
+	* @return type
+	*/
 	@Override
 	public int getType() {
-		// TODO Auto-generated method stub
 		return this.type;
 	}
 }

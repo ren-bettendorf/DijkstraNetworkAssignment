@@ -12,11 +12,21 @@ public class TaskInitiate implements Event, Protocols{
 	private int type;
 	private int numberRounds;
 	
+	/**
+	* Creates TaskInitiate object for marshalling bytes
+	*
+	* @param  numberRounds  Number of rounds the messaging node will complete
+	*/
 	public TaskInitiate(int numberRounds) {
 		this.type = Protocols.TASK_INITIATE;
 		this.numberRounds = numberRounds;
 	}
 	
+	/**
+	* Creates TaskInitiate object for unmarshalling bytes
+	*
+	* @param  marshalledBytes  Marshalled bytes to be unwrapped
+	*/
 	public TaskInitiate(byte[] marshalledBytes) throws IOException {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(marshalledBytes);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
@@ -29,6 +39,11 @@ public class TaskInitiate implements Event, Protocols{
 		din.close();
 	}
 	
+	/**
+	* Returns the marshalled bytes for sending a message
+	*
+	* @return marshalled bytes
+	*/
 	@Override
 	public byte[] getBytes() throws IOException {
 		byte[] marshalledBytes = null;
@@ -49,12 +64,22 @@ public class TaskInitiate implements Event, Protocols{
 		return marshalledBytes;
 	}
 	
+	/**
+	* Getter function for the numberRounds
+	*
+	* @return numberRounds
+	*/
+	public int getRoundNumber() {
+		return this.numberRounds;
+	}
+	
+	/**
+	* Getter function for the type
+	*
+	* @return type
+	*/
 	@Override
 	public int getType() {
 		return this.type;
-	}
-
-	public int getRoundNumber() {
-		return this.numberRounds;
 	}
 }

@@ -11,13 +11,28 @@ public class EventFactory {
 
 	private static EventFactory instance = new EventFactory();
 
+	/**
+	* Creates EventFactory object for the singleton instance
+	*/
 	private EventFactory() {
 	}
 
+	/**
+	* Creates RelayMessage object for marshalling bytes
+	*
+	* @return  Returns Singleton Instance
+	*/
 	public static EventFactory getInstance() {
 		return instance;
 	}
 
+	/**
+	* Returns the event based on the type of Event
+	*
+	* @param  data  Byte[] that holds the marshalled data
+	* @param  socket Keeps track of the socket because some Events need that data to be passed along
+	* @return Returns the Event based on the input data
+	*/
 	public synchronized Event getEvent(byte[] data, Socket socket) {
 		ByteArrayInputStream baInputStream = new ByteArrayInputStream(data);
 		DataInputStream din = new DataInputStream(new BufferedInputStream(baInputStream));
