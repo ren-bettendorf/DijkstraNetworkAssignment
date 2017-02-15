@@ -11,6 +11,7 @@ import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import cs455.overlay.dijkstra.Edge;
 import cs455.overlay.dijkstra.Graph;
 import cs455.overlay.dijkstra.Vertex;
 import cs455.overlay.transport.TCPSender;
@@ -40,6 +41,7 @@ public class Registry implements Node {
 	private String displayResults;
 	private AtomicLong sumSumSent, sumSumReceived;
 	private AtomicInteger sumMessageSent, sumMessageReceived;
+	private boolean overlayMessageStatus = false;
 
 	public Registry(int port) {
 		sumSumSent = new AtomicLong(0);
@@ -75,32 +77,66 @@ public class Registry implements Node {
 		String userInput = "";
 		while (!userInput.equals("close")) {
 			userInput = keyboard.nextLine();
-			if (userInput.equals("setup-overlay")) {
+			if (userInput.contains("setup-overlay")) {
 				if (registry.getNodesConnectedSize() >= 10) {
-					System.out.println("Creating overlay setup...");
-					registry.setupOverlay(4);
-					registry.sendConnectionList();
+					int connectionsRequired = 0;
+					if (userInput.equals("setup-overlay")) {
+						connectionsRequired = 4;
+					} else {
+						try {
+							connectionsRequired = Integer.parseInt(userInput.split(" ")[1]);
+
+						} catch (NumberFormatException nfe) {
+							System.out.println("Sorry please try again with 'setup-overlay connections-required'");
+						}
+					}
+					if (connectionsRequired > 1 && connectionsRequired < registry.getNodesConnectedSize()) {
+						System.out.println("Creating overlay setup for size " + connectionsRequired + "...");
+						registry.setupOverlay(connectionsRequired);
+						registry.sendConnectionList();
+					} else {
+						System.out.println("Couldn't create overlay with size > 1 and < "
+								+ registry.getNodesConnectedSize());
+					}
 				} else {
 					System.out.println(
 							"Can't create overlay due to insufficient nodes: " + registry.getNodesConnectedSize());
 				}
-			} else if(userInput.equals("send-overlay-link-weights")) {
+			} else if (userInput.equals("send-overlay-link-weights")) {
 				registry.assignWeights();
 				registry.sendLinkWeights();
+				registry.setOverlayStatus(true);
 			} else if (userInput.equals("list-messaging-nodes")) {
 				registry.listNodes();
+			} else if (userInput.equals("list-weights")) {
+				registry.listWeights();
 			} else if (userInput.contains("start")) {
-				int rounds = 0;
-				try {
-					rounds = Integer.parseInt(userInput.split(" ")[1]);
-					System.out.println("Starting " + rounds + " rounds");
-				} catch (NumberFormatException nfe) {
-					System.out.println("Sorry please try again with 'start number-of-rounds'");
+				if (registry.getOverlayMessageStatus()) {
+					int rounds = 0;
+					try {
+						rounds = Integer.parseInt(userInput.split(" ")[1]);
+						System.out.println("Starting " + rounds + " rounds");
+					} catch (NumberFormatException nfe) {
+						System.out.println("Sorry please try again with 'start number-of-rounds'");
+					}
+					registry.startTasks(rounds);
+				} else {
+					System.out.println(
+							"Messaging Nodes have not been informed of all connections and edge weights. Please setup-overlay <number-of-connection> and then send-overlay-link-weights.");
 				}
-				registry.startTasks(rounds);
 			}
 		}
 		keyboard.close();
+	}
+
+	private void listWeights() {
+		if(overlayMessageStatus) {
+		for(Edge edge : graph.getEdges()) {
+			System.out.println(edge.toString());
+		}
+		}else {
+			System.out.println("Edge weights haven't been setup yet. Please 'send-overlay-link-weights' first");
+		}
 	}
 
 	private void startTasks(int rounds) {
@@ -189,7 +225,7 @@ public class Registry implements Node {
 			System.out.println("Summaries have been collected.");
 
 			System.out.println(displayResults);
-			System.out.println("SUM\t\t" + sumMessageSent + "\t\t" + sumMessageReceived + "\t\t\t" + sumSumSent.get()
+			System.out.println("\t\tSUM\t" + sumMessageSent + "\t\t" + sumMessageReceived + "\t\t\t" + sumSumSent.get()
 					+ "\t\t" + sumSumReceived.get());
 
 			resetTrackers();
@@ -272,7 +308,6 @@ public class Registry implements Node {
 				messageNodeConnections.put(nodeHostPort, sender);
 				response = "Registration request successful. The number of messaging nodes currently constituting the overlay is ("
 						+ messageNodeConnections.size() + ")";
-
 			} else {
 				regResult = 0;
 				response = "Registration request unsuccessful. Node already in overlay";
@@ -306,13 +341,21 @@ public class Registry implements Node {
 		this.thread.start();
 	}
 
-	private void setTrackers() {
+	private void resetTrackers() {
 		sumSumSent.set(0);
 		sumSumReceived.set(0);
 		sumMessageSent.set(0);
 		sumMessageReceived.set(0);
 	}
-	
+
+	private boolean getOverlayMessageStatus() {
+		return overlayMessageStatus;
+	}
+
+	private void setOverlayStatus(boolean status) {
+		overlayMessageStatus = status;
+	}
+
 	public int getNodesConnectedSize() {
 		return this.messageNodeConnections.size();
 	}

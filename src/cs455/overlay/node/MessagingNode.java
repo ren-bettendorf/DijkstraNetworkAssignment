@@ -28,9 +28,11 @@ public class MessagingNode implements Node {
 	private TCPServerThread serverThread;
 	private Thread thread;
 	private HashMap<String, TCPSender> messageNodeConnections;
-	private ShortestPath path;
+	private ShortestPath path = null;
 	private AtomicLong sumReceived, sumSent;
 	private AtomicInteger messageReceived, messageSent, messageRelayed;
+	private boolean deregisterAllowedStatus;
+	private byte registeredStatus;
 
 	public MessagingNode() throws IOException {
 		this.host = InetAddress.getLocalHost().getHostAddress();
@@ -40,6 +42,8 @@ public class MessagingNode implements Node {
 		messageReceived = new AtomicInteger(0);
 		messageSent = new AtomicInteger(0);
 		messageRelayed = new AtomicInteger(0);
+		registeredStatus = 0;
+		deregisterAllowedStatus = true;
 	}
 
 	// java cs455.overlay.node.MessagingNode registry_host registry_port
@@ -63,20 +67,28 @@ public class MessagingNode implements Node {
 
 			mNode.register(registryHost, registryPort);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Invalid Registry address or port.");
+			mNode.exit();
+		} 
+		while(mNode.getRegisteredStatus() != 1) {
+			if(mNode.getRegisteredStatus() == -1) {
+				mNode.exit();
+			}
 		}
-
 		Scanner keyboard = new Scanner(System.in);
 		System.out.println("Keyboard scanner ready for commands...");
 		String userInput = "";
-		while (!userInput.equals("exit-overlay")) {
+		while (mNode.registeredStatus == 1) {
 			userInput = keyboard.nextLine();
 			if (userInput.equals("exit-overlay")) {
-				try {
-					mNode.deregister(registryHost, registryPort);
-				} catch (IOException e) {
-					e.printStackTrace();
+				if (mNode.getDeregisterAllowedStatus()) {
+					try {
+						mNode.deregister(registryHost, registryPort);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}else {
+					System.out.println("Sorry but the overlay has been setup so no deregistering is allowed.");
 				}
 			} else if (userInput.equals("print-shortest-path")) {
 				mNode.printShortestPath();
@@ -85,8 +97,21 @@ public class MessagingNode implements Node {
 		keyboard.close();
 	}
 
+	private void exit() {
+		System.out.println("Exiting program...");
+		System.exit(0);
+	}
+
+	private byte getRegisteredStatus() {
+		return registeredStatus;
+	}
+
 	private void printShortestPath() {
-		System.out.println(this.path.getFullPathWeights());
+		if (this.path != null) {
+			System.out.println(this.path.getFullPathWeights());
+		} else {
+			System.out.println("Sorry but the pathing hasn't been setup yet. Wait for registry to send information.");
+		}
 	}
 
 	@Override
@@ -96,6 +121,7 @@ public class MessagingNode implements Node {
 		case Protocols.REGISTER_RESPONSE:
 			RegistrationResponse response = (RegistrationResponse) event;
 			System.out.println(response.getResponse());
+			registeredStatus = response.getResult();
 			break;
 		case Protocols.DEREGISTER_RESPONSE:
 			DeregisterResponse deregister = (DeregisterResponse) event;
@@ -105,6 +131,7 @@ public class MessagingNode implements Node {
 		case Protocols.MESSAGING_NODES_LIST:
 			MessagingNodesList nodesList = (MessagingNodesList) event;
 			System.out.println("Received MessagingNodesList");
+			deregisterAllowedStatus = false;
 			setMessagingNodesList(nodesList);
 			break;
 		case Protocols.LINK_WEIGHTS:
@@ -155,7 +182,7 @@ public class MessagingNode implements Node {
 
 	private void consumeMessage(RelayMessage message) {
 		String[] relayPaths = message.getConnections().split(" ");
-		if ( !relayPaths[relayPaths.length-1].equals(this.ID) ) {
+		if (!relayPaths[relayPaths.length - 1].equals(this.ID)) {
 			String connections = "";
 			for (int i = 1; i < relayPaths.length; i++) {
 				connections += relayPaths[i] + " ";
@@ -175,24 +202,22 @@ public class MessagingNode implements Node {
 
 	private void startRounds(int roundNumber) {
 		for (int round = 0; round < roundNumber; round++) {
-			if(round % (roundNumber/5) == 0) {
+			if (round % (roundNumber / 5) == 0) {
 				System.out.println("[STATUS] On round " + round);
 			}
-			ArrayList<String> nodesToMessage = new ArrayList<String>();
-
 			String node = pickRandomNode();
 			String nodePath = path.getCachedRoute(new Vertex(node, 4));
 
 			String firstNode = nodePath.split(" ")[0];
 			for (int nodes = 0; nodes < 5; nodes++) {
-				
+
 				Random random = new Random();
 				int payload = random.nextInt(2147483647);
 				if (random.nextDouble() < 0.5) {
 					payload *= -1;
 				}
 				sumSent.getAndAdd(payload);
-				
+
 				RelayMessage message = new RelayMessage(payload, nodePath);
 				messageSent.incrementAndGet();
 				try {
@@ -222,7 +247,7 @@ public class MessagingNode implements Node {
 			}
 		}
 		System.out.println("All connections are established. Number of connections: " + nodeList.getNumberNodes());
-		
+
 	}
 
 	private ArrayList<Edge> setLinkWeights(LinkWeights linkWeights) {
@@ -264,14 +289,15 @@ public class MessagingNode implements Node {
 
 		System.out.println("Sending deregistration request....");
 		registrySender.sendData(deregisterRequest.getBytes());
+		
 	}
 
 	public void deregisterResponse(DeregisterResponse response) throws IOException {
-		if (response.getResult() == 1) {
-			registrySocket.close();
+		if(response.getResult() > 0) {
+			registeredStatus = -1;
 		}
 	}
-	
+
 	private String pickRandomNode() {
 		ArrayList<String> nodes = new ArrayList<String>(path.getOtherVertices());
 		return (String) nodes.get(new Random().nextInt(nodes.size()));
@@ -284,7 +310,7 @@ public class MessagingNode implements Node {
 		messageSent.set(0);
 		messageRelayed.set(0);
 	}
-	
+
 	public void close() {
 		this.serverThread.endThread();
 	}
@@ -295,6 +321,10 @@ public class MessagingNode implements Node {
 
 	public void setPort(int port) {
 		this.port = port;
+	}
+
+	public boolean getDeregisterAllowedStatus() {
+		return deregisterAllowedStatus;
 	}
 
 	@Override
