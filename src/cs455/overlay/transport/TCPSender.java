@@ -8,11 +8,21 @@ public class TCPSender {
 	private Socket socket;
 	private DataOutputStream dout;
 	
+	/**
+	* Creates the TCPSender object for a given Socket
+	*
+	* @param socket Socket to be used for connection
+	*/
 	public TCPSender(Socket socket) throws IOException {
 		this.socket = socket;
 		dout = new DataOutputStream(socket.getOutputStream());
 	}
 	
+	/**
+	* Sends marshalled byte[] to the other end of the socket
+	*
+	* @param dataToSend Marshalled data to be sent
+	*/
 	public synchronized void sendData(byte[] dataToSend) throws IOException {
 		int dataLength = dataToSend.length;
 		
@@ -21,6 +31,11 @@ public class TCPSender {
 		dout.flush();
 	}
 	
+	/**
+	* Getter for the socket being used
+	*
+	* @return Socket being used
+	*/
 	public Socket getSocket() {
 		return this.socket;
 	}

@@ -15,12 +15,24 @@ public class RegistrationRequest implements Event, Protocols {
 	private int port;
 	private Socket socket;
 	
+	/**
+	* Creates RegisterRequest object and marshalls the data
+	*
+	* @param hostname Hostname to be registered
+	* @param port Port to be registered
+	*/
 	public RegistrationRequest(String hostname, int port) {
 		this.type = Protocols.REGISTER_REQUEST;
 		this.hostname = hostname;
 		this.port = port;
 	}
 	
+	/**
+	* Creates RegisterRequest object and unmarshalls the data
+	*
+	* @param marshalledBytes Bytes containing data
+	* @param socket Socket to be used to verify sender
+	*/
 	public RegistrationRequest(byte[] marshalledBytes, Socket socket) throws IOException {
 		this.socket = socket;
 		
@@ -40,6 +52,11 @@ public class RegistrationRequest implements Event, Protocols {
 		din.close();
 	}
 	
+	/**
+	* Marshalls the data for a TCPSender
+	*
+	* @return Returns the marshalled data
+	*/
 	@Override
 	public byte[] getBytes() throws IOException {
 		byte[] marshalledBytes = null;
@@ -65,21 +82,40 @@ public class RegistrationRequest implements Event, Protocols {
 		return marshalledBytes;
 	}
 	
+	/**
+	* Getter for hostname
+	*
+	* @return Returns the hostname to be registered
+	*/
 	public String getHostname() {
 		return this.hostname;
 	}
 	
+	/**
+	* Getter for port
+	*
+	* @return Returns the port to be registered
+	*/
 	public int getPort() {
 		return this.port;
 	}
 	
+	/**
+	* Getter for socket
+	*
+	* @return Returns the socket associated with registration
+	*/
 	public Socket getSocket() {
 		return this.socket;
 	}
 
+	/**
+	* Getter for event type
+	*
+	* @return Returns the event type
+	*/
 	@Override
 	public int getType() {
-		// TODO Auto-generated method stub
 		return this.type;
 	}
 }

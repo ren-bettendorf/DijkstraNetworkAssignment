@@ -15,13 +15,21 @@ public class TCPReceiverThread implements Runnable {
 	private Socket socket;
 	private DataInputStream din;
 	
+	/**
+	* Creates TCPReceiverThread object for all incoming connections for a given node and socket
+	*
+	* @param node Node to be associated with object
+	* @param socket Socket to be associated with object
+	*/
 	public TCPReceiverThread(Node node, Socket socket) throws IOException {
 		this.node = node;
 		this.socket = socket;
 		din = new DataInputStream(socket.getInputStream());
 	}
 	
-	
+	/**
+	* Starts when Thread is executed
+	*/
 	@Override
 	public void run() {
 		int dataLength;
@@ -52,7 +60,9 @@ public class TCPReceiverThread implements Runnable {
 		}
 	}
 	
-	
+	/**
+	* Teardown method for the TCPReceiverThread
+	*/
 	private void teardown() throws IOException {
 		din.close();
 		this.socket.close();

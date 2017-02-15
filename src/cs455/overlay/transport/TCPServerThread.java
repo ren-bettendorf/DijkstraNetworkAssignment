@@ -13,6 +13,11 @@ public class TCPServerThread implements Runnable {
 	private Node node;
 	private boolean runStatus;
 	
+	/**
+	* Creates TCPServerThread object at a given port for a given node for all incoming connections
+	*
+	* @param dataToSend Marshalled data to be sent
+	*/
 	public TCPServerThread(int port, Node node) throws IOException {
 		this.node = node;
 		try {
@@ -23,6 +28,9 @@ public class TCPServerThread implements Runnable {
 		}
 	}
 	
+	/**
+	* Starts when Thread is executed
+	*/
 	@Override
 	public void run() {
 		System.out.println("Starting thread for node: " + node.toString() + ". Listening on port: " + getPort());
@@ -41,24 +49,39 @@ public class TCPServerThread implements Runnable {
 		try {
 			teardown();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println("Ending thread for node: " + node.toString() + ". Closing on port: " + getPort());
 	}
 	
+	/**
+	* Getter for port being used
+	*
+	* @return Port being used
+	*/
 	public int getPort() {
 		return this.port;
 	}
 	
+	/**
+	* Getter for ServerSocket
+	*
+	* @return ServerSocket being used
+	*/
 	public ServerSocket getServerSocket() {
 		return this.serverSocket;
 	}
 	
+	/**
+	* Ends the thread
+	*/
 	public void endThread() {
 		this.runStatus = false;
 	}
 	
+	/**
+	* Teardown method for the TCPServerThread
+	*/
 	private void teardown() throws IOException {
 		this.serverSocket.close();
 		
