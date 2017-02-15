@@ -90,7 +90,7 @@ public class MessagingNode implements Node {
 	}
 
 	@Override
-	public synchronized void onEvent(Event event) throws IOException {
+	public void onEvent(Event event) throws IOException {
 		int eventType = event.getType();
 		switch (eventType) {
 		case Protocols.REGISTER_RESPONSE:
