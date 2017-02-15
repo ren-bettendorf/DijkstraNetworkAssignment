@@ -34,6 +34,9 @@ public class MessagingNode implements Node {
 	private boolean deregisterAllowedStatus;
 	private byte registeredStatus;
 
+	/**
+	* Creates MessagingNode object and sets all default values
+	*/
 	public MessagingNode() throws IOException {
 		this.host = InetAddress.getLocalHost().getHostAddress();
 		messageNodeConnections = new HashMap<String, TCPSender>();
@@ -46,7 +49,13 @@ public class MessagingNode implements Node {
 		deregisterAllowedStatus = true;
 	}
 
-	// java cs455.overlay.node.MessagingNode registry_host registry_port
+	
+	/**
+	* Main method for MessagingNode and is started by the below command
+	* java cs455.overlay.node.MessagingNode registry_host registry_port
+	* @param source Vertex where Edge begins
+	* @param destination Vertex where Edge ends
+	*/
 	public static void main(String[] args) {
 		String registryHost = null;
 		int registryPort = -1;
@@ -83,7 +92,7 @@ public class MessagingNode implements Node {
 			if (userInput.equals("exit-overlay")) {
 				if (mNode.getDeregisterAllowedStatus()) {
 					try {
-						mNode.deregister(registryHost, registryPort);
+						mNode.deregister();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -97,15 +106,26 @@ public class MessagingNode implements Node {
 		keyboard.close();
 	}
 
+	/**
+	* Closes the application
+	*/
 	private void exit() {
 		System.out.println("Exiting program...");
 		System.exit(0);
 	}
 
+	/**
+	* Getter for the registered status
+	*
+	* @return  Returns whether MessagingNode is registered
+	*/
 	private byte getRegisteredStatus() {
 		return registeredStatus;
 	}
 
+	/**
+	* Prints the shortest path to each node
+	*/
 	private void printShortestPath() {
 		if (this.path != null) {
 			System.out.println(this.path.getFullPathWeights());
@@ -114,6 +134,11 @@ public class MessagingNode implements Node {
 		}
 	}
 
+	/**
+	* Checks which Event passed through the socket then handles the message
+	*
+	* @param event Event type to handle
+	*/
 	@Override
 	public void onEvent(Event event) throws IOException {
 		int eventType = event.getType();
@@ -151,7 +176,7 @@ public class MessagingNode implements Node {
 			sendTaskCompleteMessage();
 			break;
 		case Protocols.RELAY_MESSAGE:
-			consumeMessage((RelayMessage) event);
+			handleMessage((RelayMessage) event);
 			break;
 		case Protocols.TASK_SUMMARY_REQUEST:
 			sendTaskSummaryResponse();
@@ -159,6 +184,9 @@ public class MessagingNode implements Node {
 		}
 	}
 
+	/**
+	* Sends the registry the task summary
+	*/
 	private void sendTaskSummaryResponse() {
 		TaskSummaryResponse task = new TaskSummaryResponse(this.host, getPort(), messageSent.get(), sumSent.get(),
 				messageReceived.get(), sumReceived.get(), messageRelayed.get());
@@ -168,9 +196,13 @@ public class MessagingNode implements Node {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		// Reset all the trackers to 0
 		resetTrackers();
 	}
 
+	/**
+	* Send the task complete message to registry
+	*/
 	private void sendTaskCompleteMessage() {
 		TaskComplete task = new TaskComplete(this.host, getPort());
 		try {
@@ -180,8 +212,16 @@ public class MessagingNode implements Node {
 		}
 	}
 
-	private void consumeMessage(RelayMessage message) {
+	/**
+	* Handles the message and determines if node is final destination
+	* continues node on path if not final destination
+	* 
+	* @param message Message to determine destination
+	*/
+	private void handleMessage(RelayMessage message) {
+		// Paths are NODE NODE NODE so split on ' '
 		String[] relayPaths = message.getConnections().split(" ");
+		// Checks the final node and if it is the same as the ID then message is at destination otherwise continue on path
 		if (!relayPaths[relayPaths.length - 1].equals(this.ID)) {
 			String connections = "";
 			for (int i = 1; i < relayPaths.length; i++) {
@@ -200,8 +240,14 @@ public class MessagingNode implements Node {
 		}
 	}
 
+	/**
+	* Starts the task for a given amount of rounds
+	*
+	* @param roundNumber Number of rounds to run
+	*/
 	private void startRounds(int roundNumber) {
 		for (int round = 0; round < roundNumber; round++) {
+			// Tracker for the status of the message sending
 			if (round % (roundNumber / 5) == 0) {
 				System.out.println("[STATUS] On round " + round);
 			}
@@ -229,6 +275,11 @@ public class MessagingNode implements Node {
 		}
 	}
 
+	/**
+	* Connects to the nodes that the registry sent 
+	*
+	* @param nodeList List of Nodes that are supposed to be connected to
+	*/
 	private void setMessagingNodesList(MessagingNodesList nodeList) {
 		String[] list = nodeList.getConnectList().split("\n");
 		for (int index = 0; index < nodeList.getNumberNodes(); index++) {
@@ -250,6 +301,12 @@ public class MessagingNode implements Node {
 
 	}
 
+	/**
+	* Creates the list of edges contained in a given LinkWeights event
+	* 
+	* @param linkWeights Contains all edges for graph
+	* @return  Returns the List of Edges
+	*/
 	private ArrayList<Edge> setLinkWeights(LinkWeights linkWeights) {
 		ArrayList<Edge> returnEdges = new ArrayList<Edge>();
 		String[] edges = linkWeights.getListWeights().split("\n");
@@ -262,6 +319,11 @@ public class MessagingNode implements Node {
 		return returnEdges;
 	}
 
+	/**
+	* Starts the thread for TCPServerThread
+	*
+	* @param serverThread Returns source of the Edge
+	*/
 	private void startServerThread(TCPServerThread serverThread) {
 		this.serverThread = serverThread;
 		setPort(serverThread.getPort());
@@ -269,6 +331,12 @@ public class MessagingNode implements Node {
 		this.thread.start();
 	}
 
+	/**
+	* Attempts to connect to the registry
+	*
+	* @param registryHost Address of the registry
+	* @param registryPort Port of the registry
+	*/
 	public void register(String registryHost, int registryPort) throws IOException {
 		System.out.println("Creating registration request...");
 		this.ID = this.host + ":" + getPort();
@@ -283,26 +351,43 @@ public class MessagingNode implements Node {
 		registrySender.sendData(registrationRequest.getBytes());
 	}
 
-	public void deregister(String registryHost, int registryPort) throws IOException {
+	/**
+	* Dergisters from the registry
+	*
+	* @param registryHost Deregisters from the registry
+	*/
+	public void deregister() throws IOException {
 		System.out.println("Creating deregistration request...");
 		DeregisterRequest deregisterRequest = new DeregisterRequest(this.host, getPort());
 
 		System.out.println("Sending deregistration request....");
 		registrySender.sendData(deregisterRequest.getBytes());
-		
 	}
 
+	/**
+	* Determines the response of the dergisterrequest
+	*
+	* @param response Response to be determined if deregister was successful
+	*/
 	public void deregisterResponse(DeregisterResponse response) throws IOException {
 		if(response.getResult() > 0) {
 			registeredStatus = -1;
 		}
 	}
 
+	/**
+	* Grabs a random node to message
+	*
+	* @return Random node is picked
+	*/
 	private String pickRandomNode() {
 		ArrayList<String> nodes = new ArrayList<String>(path.getOtherVertices());
 		return nodes.get(new Random().nextInt(nodes.size()));
 	}
 
+	/**
+	* Resets all the trackers back to 0
+	*/
 	private void resetTrackers() {
 		sumReceived.set(0);
 		sumSent.set(0);
@@ -311,22 +396,38 @@ public class MessagingNode implements Node {
 		messageRelayed.set(0);
 	}
 
-	public void close() {
-		this.serverThread.endThread();
-	}
-
+	/**
+	* Getter for the port used for connections
+	*
+	* @return  Returns port
+	*/
 	public int getPort() {
 		return this.port;
 	}
 
+	/**
+	* Sets the port for connections
+	*
+	* @param port Sets port to be used for connections
+	*/
 	public void setPort(int port) {
 		this.port = port;
 	}
 
+	/**
+	* Sets the dergister status
+	*
+	* @return  Whether deregister is allowed
+	*/
 	public boolean getDeregisterAllowedStatus() {
 		return deregisterAllowedStatus;
 	}
 
+	/**
+	* Overrides the string status and sets the String details
+	*
+	* @return  String version of MessagingNode
+	*/
 	@Override
 	public String toString() {
 		try {
