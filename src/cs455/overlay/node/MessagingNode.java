@@ -53,6 +53,7 @@ public class MessagingNode implements Node {
 	/**
 	* Main method for MessagingNode and is started by the below command
 	* java cs455.overlay.node.MessagingNode registry_host registry_port
+	*
 	* @param source Vertex where Edge begins
 	* @param destination Vertex where Edge ends
 	*/

@@ -43,6 +43,11 @@ public class Registry implements Node {
 	private AtomicInteger sumMessageSent, sumMessageReceived;
 	private boolean overlayMessageStatus = false;
 
+	/**
+	* Creates the Registry object at a given port
+	*
+	* @param port Port to defined connections
+	*/
 	public Registry(int port) {
 		sumSumSent = new AtomicLong(0);
 		sumSumReceived = new AtomicLong(0);
@@ -59,7 +64,11 @@ public class Registry implements Node {
 		this.graph = new Graph();
 	}
 
-	// java cs455.overlay.node.Registry local_port
+	/**
+	* Creates the Registry object at a given port
+	* java cs455.overlay.node.Registry local_port
+	*
+	*/
 	public static void main(String[] args) {
 		Registry registry = null;
 		if (args.length == 1) {
@@ -129,6 +138,7 @@ public class Registry implements Node {
 		keyboard.close();
 	}
 
+	
 	private void listWeights() {
 		if(overlayMessageStatus) {
 		for(Edge edge : graph.getEdges()) {
@@ -138,20 +148,31 @@ public class Registry implements Node {
 			System.out.println("Edge weights haven't been setup yet. Please 'send-overlay-link-weights' first");
 		}
 	}
-
+	/**
+	* Starts a task for a given amount of rounds for all nodes
+	*
+	* @param rounds Number of rounds to run
+	*/
 	private void startTasks(int rounds) {
-		tasksComplete = new ArrayList<String>(messageNodeConnections.keySet());
-		displayResults = "Node ID\t\t\tMessage Sent\tMessage Received\tSum Sent Messages\tSum Received Messages\tMessage Relayed\n";
-		TaskInitiate task = new TaskInitiate(rounds);
-		for (TCPSender sender : messageNodeConnections.values()) {
-			try {
-				sender.sendData(task.getBytes());
-			} catch (IOException e) {
-				e.printStackTrace();
+		if(rounds > 0) {
+			tasksComplete = new ArrayList<String>(messageNodeConnections.keySet());
+			displayResults = "Node ID\t\t\tMessage Sent\tMessage Received\tSum Sent Messages\tSum Received Messages\tMessage Relayed\n";
+			TaskInitiate task = new TaskInitiate(rounds);
+			for (TCPSender sender : messageNodeConnections.values()) {
+				try {
+					sender.sendData(task.getBytes());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
+		} else {
+			System.out.println("Sorry but the rounds must be greater than 0");
 		}
 	}
 
+	/**
+	* Sends a connection list for each messaging node for what connections they need to make
+	*/
 	private void sendConnectionList() {
 		HashMap<Vertex, ArrayList<Vertex>> connections = this.graph.getConnectionsHashMap();
 		for (Entry<Vertex, ArrayList<Vertex>> entry : connections.entrySet()) {
@@ -168,12 +189,18 @@ public class Registry implements Node {
 		}
 	}
 
+	/**
+	* Prints the nodes connected
+	*/
 	public void listNodes() {
 		for (String s : messageNodeConnections.keySet()) {
 			System.out.println(s);
 		}
 	}
 
+	/**
+	* Sends the edge information to the messaging nodes
+	*/
 	public void sendLinkWeights() {
 		LinkWeights linkWeights = new LinkWeights(this.graph.getEdges().size(), this.graph.marshallEdgeString());
 		for (TCPSender sender : messageNodeConnections.values()) {
@@ -185,10 +212,18 @@ public class Registry implements Node {
 		}
 	}
 
+	/**
+	* Assigns weights to the edges
+	*/
 	public void assignWeights() {
 		this.graph.assignWeights();
 	}
 
+	/**
+	* Handles the event that was seen at the TCPReceiverThread
+	*
+	* @param event Event to handle
+	*/
 	@Override
 	public synchronized void onEvent(Event event) throws IOException {
 		int eventType = event.getType();
@@ -211,6 +246,11 @@ public class Registry implements Node {
 
 	}
 
+	/**
+	* Creates the task summary responses final message
+	*
+	* @param task Task to have info unmarshalled
+	*/
 	private void handleTaskSummaryResponse(TaskSummaryResponse task) {
 		tasksComplete.remove(task.getNodeID());
 		displayResults += task.getNodeID() + "\t" + task.getMessageSent() + "\t\t" + task.getMessageReceived()
@@ -233,6 +273,11 @@ public class Registry implements Node {
 		}
 	}
 
+	/**
+	* Handles task complete message
+	*
+	* @param task Rounds have been completed from messaging node
+	*/
 	private void handleTaskComplete(TaskComplete task) {
 		tasksComplete.remove(task.getNodeID());
 		if (tasksComplete.isEmpty()) {
@@ -247,6 +292,9 @@ public class Registry implements Node {
 		}
 	}
 
+	/**
+	* Creates the TaskSummaryRequest to be sent to all nodes
+	*/
 	private void pullTrafficSummary() {
 		TaskSummaryRequest request = new TaskSummaryRequest();
 		tasksComplete = new ArrayList<String>(messageNodeConnections.keySet());
@@ -259,6 +307,11 @@ public class Registry implements Node {
 		}
 	}
 
+	/**
+	* Attempts to deregister a given node
+	*
+	* @param derequest Deregister request from a node
+	*/
 	private void deregisterNode(DeregisterRequest derequest) {
 		String node = derequest.getFullHost();
 		Socket nodeSocket = derequest.getSocket();
@@ -295,6 +348,11 @@ public class Registry implements Node {
 
 	}
 
+	/**
+	* Attempts to register a node
+	*
+	* @param request Register request data to be unmarshalled
+	*/
 	private void registerNode(RegistrationRequest request) throws UnknownHostException, IOException {
 		String nodeHostPort = request.getHostname() + ":" + request.getPort();
 		System.out.println("Received a registration request from: " + nodeHostPort);
@@ -325,6 +383,11 @@ public class Registry implements Node {
 		sender.sendData(registrationResponse.getBytes());
 	}
 
+	/**
+	* Creates the Overlay for the nodes
+	*
+	* @param connectionsRequired Number of connections required
+	*/
 	private void setupOverlay(int connectionsRequired) {
 		// Add a vertex for each node in node map
 		ArrayList<Vertex> vertices = new ArrayList<Vertex>();
@@ -335,12 +398,20 @@ public class Registry implements Node {
 		System.out.println("Overlay setup");
 	}
 
+	/**
+	* Starts TCPServerThread for registry
+	*
+	* @param serverThread Starts this thread
+	*/
 	public void startServerThread(TCPServerThread serverThread) {
 		this.serverThread = serverThread;
 		this.thread = new Thread(this.serverThread);
 		this.thread.start();
 	}
 
+	/**
+	* Resets the trackers to 0
+	*/
 	private void resetTrackers() {
 		sumSumSent.set(0);
 		sumSumReceived.set(0);
@@ -348,22 +419,47 @@ public class Registry implements Node {
 		sumMessageReceived.set(0);
 	}
 
+	/**
+	* Getter for the overlayMessageStatus
+	*
+	* @return overlay message status
+	*/
 	private boolean getOverlayMessageStatus() {
 		return overlayMessageStatus;
 	}
 
+	/**
+	* Sets overlayMessageStatus to a given status
+	*
+	* @param status Status to be set to
+	*/
 	private void setOverlayStatus(boolean status) {
 		overlayMessageStatus = status;
 	}
 
+	/**
+	* Getter for the number of nodes connected
+	*
+	* @return Number of nodes connected
+	*/
 	public int getNodesConnectedSize() {
 		return this.messageNodeConnections.size();
 	}
 
+	/**
+	* Getter for the port used for connections
+	*
+	* @return Registry port used for connections
+	*/
 	public int getPort() {
 		return this.port;
 	}
 
+	/**
+	* Creates the String version of the Registry
+	*
+	* @return String versino of registry
+	*/
 	@Override
 	public String toString() {
 		return this.host;
