@@ -300,7 +300,7 @@ public class MessagingNode implements Node {
 
 	private String pickRandomNode() {
 		ArrayList<String> nodes = new ArrayList<String>(path.getOtherVertices());
-		return (String) nodes.get(new Random().nextInt(nodes.size()));
+		return nodes.get(new Random().nextInt(nodes.size()));
 	}
 
 	private void resetTrackers() {
